@@ -3,13 +3,12 @@ import * as THREE from "three";
 const scene = new THREE.Scene();
 
 //renderer
-const canvasContainer = document.getElementById("canvascontainer");
-const canvas = document.getElementById("canvas");
+let canvas = document.getElementById("canvas");
 const renderer = new THREE.WebGLRenderer({ canvas: canvas });
-renderer.setSize(canvasContainer.clientWidth, canvasContainer.clientHeight);
+renderer.setSize(window.innerWidth, window.innerHeight);
 
 //camera
-const aspect = canvasContainer.clientWidth / canvasContainer.clientHeight;
+const aspect = canvas.clientWidth / canvas.clientHeight;
 const frustumSize = 10;
 const camera = new THREE.OrthographicCamera(
   (frustumSize * aspect) / -2,
@@ -19,18 +18,55 @@ const camera = new THREE.OrthographicCamera(
   0.1,
   1000
 );
+camera.position.z = 5;
 
-//circle geo
-const geometry = new THREE.CircleGeometry(1);
+//circle
+const geometry = new THREE.CircleGeometry(0.1);
 const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
 const circle = new THREE.Mesh(geometry, material);
 scene.add(circle);
+let vx = 0;
+let vy = 0;
 
-camera.position.z = 5;
+//control logic
+let up = false;
+let down = false;
+let left = false;
+let right = false;
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "ArrowUp") {
+    up = true;
+  }
+  if (e.key === "ArrowDown") {
+    down = true;
+  }
+  if (e.key === "ArrowLeft") {
+    left = true;
+  }
+  if (e.key === "ArrowRight") {
+    right = true;
+  }
+});
+
+document.addEventListener("keyup", (e) => {
+  if (e.key === "ArrowUp") {
+    up = false;
+  }
+  if (e.key === "ArrowDown") {
+    down = false;
+  }
+  if (e.key === "ArrowLeft") {
+    left = false;
+  }
+  if (e.key === "ArrowRight") {
+    right = false;
+  }
+});
 
 //logic loops
 let lastUpdate = performance.now();
-const timestep = 1000 / 1;
+const timestep = 1000 / 60;
 
 function gameLoop() {
   const now = performance.now();
@@ -46,11 +82,49 @@ function gameLoop() {
 }
 
 function updateGame() {
-  //game shit here
+  if (up && vy < 0.1) {
+    vy += 0.01;
+  }
+  if (down && vy > -0.1) {
+    vy -= 0.01;
+  }
+  if (left && vx > -0.1) {
+    vx -= 0.01;
+  }
+  if (right && vx < 0.1) {
+    vx += 0.01;
+  }
+
+  if (vx > 0) {
+    vx -= 0.0025;
+    if (vx < 0.005) {
+      vx = 0;
+    }
+  } else if (vx < 0) {
+    vx += 0.0025;
+    if (vx > -0.005) {
+      vx = 0;
+    }
+  }
+
+  if (vy > 0) {
+    vy -= 0.0025;
+    if (vy < 0.005) {
+      vy = 0;
+    }
+  } else if (vy < 0) {
+    vy += 0.0025;
+    if (vy > -0.005) {
+      vy = 0;
+    }
+  }
+
+  circle.position.x += vx;
+  circle.position.y += vy;
 }
 
 function renderLoop() {
-  renderer.setSize(canvasContainer.clientWidth, canvasContainer.clientHeight);
+  renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.render(scene, camera);
   requestAnimationFrame(renderLoop);
 }
