@@ -2,11 +2,20 @@ body {
   margin: 0;
   width: 100vw;
   height: 100vh;
-  overflow: hidden; /* Prevent scrollbars */
+  overflow: hidden;
+  position: relative;
 }
 
 #canvas {
-  display: block; /* Remove inline gaps */
+  display: block;
   width: 100vw;
   height: 100vh;
+}
+
+#status {
+  position: absolute;
+  font-weight: bold;
+  top: 0;
+  left: 0;
+  z-index: 1;
 }

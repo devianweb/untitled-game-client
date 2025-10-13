@@ -1,5 +1,29 @@
 import * as THREE from "three";
 
+//WebSockets
+const status = document.getElementById("status");
+
+// Connect to the WebSocket server
+const ws = new WebSocket("ws://localhost:8080/ws/games/1337");
+
+// Connection opened
+ws.onopen = () => {
+  status.textContent = "Connected to server";
+  status.style.color = "green";
+};
+
+// Handle errors
+ws.onerror = (error) => {
+  status.textContent = "Error: " + error.message;
+  status.style.color = "red";
+};
+
+// Handle connection close
+ws.onclose = () => {
+  status.textContent = "Disconnected from server";
+  status.style.color = "red";
+};
+
 const scene = new THREE.Scene();
 
 //renderer
@@ -20,8 +44,8 @@ const camera = new THREE.OrthographicCamera(
 );
 camera.position.z = 5;
 
-//circle
-const geometry = new THREE.CircleGeometry(0.1);
+//player 1 circle
+const geometry = new THREE.CircleGeometry(0.1, 64);
 const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
 const circle = new THREE.Mesh(geometry, material);
 scene.add(circle);
@@ -74,6 +98,7 @@ function gameLoop() {
 
   while (dt >= timestep) {
     updateGame();
+    updateServer();
     dt -= timestep;
     lastUpdate += timestep;
   }
@@ -121,6 +146,16 @@ function updateGame() {
 
   circle.position.x += vx;
   circle.position.y += vy;
+}
+
+function updateServer() {
+  if (ws.OPEN && (vx !== 0 || vy !== 0)) {
+    var playerPosition = {
+      x: circle.position.x,
+      y: circle.position.y,
+    };
+    ws.send(JSON.stringify(playerPosition));
+  }
 }
 
 function renderLoop() {
