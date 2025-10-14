@@ -24,6 +24,11 @@ ws.onclose = () => {
   status.style.color = "red";
 };
 
+// Handle message recieved
+ws.onmessage = (event) => {
+  console.log(event.data);
+};
+
 const scene = new THREE.Scene();
 
 //renderer
