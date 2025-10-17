@@ -1,10 +1,20 @@
 import * as THREE from "three";
+import { Circle } from "./Circle";
+
+const userId = crypto.randomUUID();
+const players = new Map();
+let sendFinalInputTick = false;
+
+const randomHexColorCode = () => {
+  let n = (Math.random() * 0xfffff * 1000000).toString(16);
+  return "#" + n.slice(0, 6);
+};
 
 //WebSockets
 const status = document.getElementById("status");
 
 // Connect to the WebSocket server
-const ws = new WebSocket("ws://localhost:8080/ws/games/1337");
+const ws = new WebSocket(`ws://localhost:8080/ws/games/1337?userId=${userId}`);
 
 // Connection opened
 ws.onopen = () => {
@@ -26,7 +36,15 @@ ws.onclose = () => {
 
 // Handle message recieved
 ws.onmessage = (event) => {
-  console.log(event.data);
+  var json = JSON.parse(event.data);
+  // console.log(json);
+  if (json.type === "POSITION") {
+    handlePositionUpdate(json);
+  }
+
+  if (json.type === "AUTHORITATIVE") {
+    handleAuthoritativeUpdate(json);
+  }
 };
 
 const scene = new THREE.Scene();
@@ -49,13 +67,10 @@ const camera = new THREE.OrthographicCamera(
 );
 camera.position.z = 5;
 
-//player 1 circle
-const geometry = new THREE.CircleGeometry(0.1, 64);
-const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-const circle = new THREE.Mesh(geometry, material);
-scene.add(circle);
-let vx = 0;
-let vy = 0;
+//circles
+const player1 = new Circle(0x00ff00);
+players.set(userId, player1);
+scene.add(player1.mesh);
 
 //control logic
 let up = false;
@@ -96,6 +111,7 @@ document.addEventListener("keyup", (e) => {
 //logic loops
 let lastUpdate = performance.now();
 const timestep = 1000 / 60;
+let tick = 0;
 
 function gameLoop() {
   const now = performance.now();
@@ -106,60 +122,77 @@ function gameLoop() {
     updateServer();
     dt -= timestep;
     lastUpdate += timestep;
+    if (tick % 600 == 0) {
+      console.log("x: " + player1.mesh.position.x);
+      console.log("y: " + player1.mesh.position.y);
+      console.log("vx: " + player1.vx);
+      console.log("vy: " + player1.vy);
+    }
+    tick++;
   }
 
   setTimeout(gameLoop, 0);
 }
 
 function updateGame() {
-  if (up && vy < 0.1) {
-    vy += 0.01;
+  if (up && player1.vy < 0.1) {
+    player1.vy += 0.01;
   }
-  if (down && vy > -0.1) {
-    vy -= 0.01;
+  if (down && player1.vy > -0.1) {
+    player1.vy -= 0.01;
   }
-  if (left && vx > -0.1) {
-    vx -= 0.01;
+  if (left && player1.vx > -0.1) {
+    player1.vx -= 0.01;
   }
-  if (right && vx < 0.1) {
-    vx += 0.01;
-  }
-
-  if (vx > 0) {
-    vx -= 0.0025;
-    if (vx < 0.005) {
-      vx = 0;
-    }
-  } else if (vx < 0) {
-    vx += 0.0025;
-    if (vx > -0.005) {
-      vx = 0;
-    }
+  if (right && player1.vx < 0.1) {
+    player1.vx += 0.01;
   }
 
-  if (vy > 0) {
-    vy -= 0.0025;
-    if (vy < 0.005) {
-      vy = 0;
+  if (player1.vx > 0) {
+    player1.vx -= 0.0025;
+    if (player1.vx < 0.005) {
+      player1.vx = 0;
     }
-  } else if (vy < 0) {
-    vy += 0.0025;
-    if (vy > -0.005) {
-      vy = 0;
+  } else if (player1.vx < 0) {
+    player1.vx += 0.0025;
+    if (player1.vx > -0.005) {
+      player1.vx = 0;
     }
   }
 
-  circle.position.x += vx;
-  circle.position.y += vy;
+  if (player1.vy > 0) {
+    player1.vy -= 0.0025;
+    if (player1.vy < 0.005) {
+      player1.vy = 0;
+    }
+  } else if (player1.vy < 0) {
+    player1.vy += 0.0025;
+    if (player1.vy > -0.005) {
+      player1.vy = 0;
+    }
+  }
+
+  player1.mesh.position.x += player1.vx;
+  player1.mesh.position.y += player1.vy;
 }
 
 function updateServer() {
-  if (ws.OPEN && (vx !== 0 || vy !== 0)) {
-    var playerPosition = {
-      x: circle.position.x,
-      y: circle.position.y,
-    };
-    ws.send(JSON.stringify(playerPosition));
+  if (ws.readyState === WebSocket.OPEN) {
+    if (up || down || left || right || sendFinalInputTick) {
+      sendFinalInputTick = true;
+      var message = {
+        userId: userId,
+        type: "INPUT",
+        payload: {
+          up: up,
+          down: down,
+          left: left,
+          right: right,
+        },
+      };
+      ws.send(JSON.stringify(message));
+      if (!up && !down && !left && !right) sendFinalInputTick = false;
+    }
   }
 }
 
@@ -167,6 +200,28 @@ function renderLoop() {
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.render(scene, camera);
   requestAnimationFrame(renderLoop);
+}
+
+function handlePositionUpdate(json) {
+  if (!players.has(json.userId)) {
+    const newPlayer = new Circle(randomHexColorCode());
+    players.set(json.userId, newPlayer);
+    scene.add(newPlayer.mesh);
+  }
+
+  const player = players.get(json.userId);
+  player.mesh.position.x = json.payload.x;
+  player.mesh.position.y = json.payload.y;
+}
+
+function handleAuthoritativeUpdate(json) {
+  Object.entries(json.payload.players).forEach(([userId, player]) => {
+    var localPlayer = players.get(userId);
+    localPlayer.mesh.position.x = player.x;
+    localPlayer.mesh.position.y = player.y;
+    localPlayer.vx = player.vx;
+    localPlayer.vy = player.vy;
+  });
 }
 
 gameLoop();
