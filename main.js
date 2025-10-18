@@ -14,7 +14,7 @@ const randomHexColorCode = () => {
 const status = document.getElementById("status");
 
 // Connect to the WebSocket server
-const ws = new WebSocket(`ws://localhost:8080/ws/games/1337?userId=${userId}`);
+const ws = new WebSocket(`wss://semiglazed-too-kimberlie.ngrok-free.dev/ws/games/1337?userId=${userId}`);
 
 // Connection opened
 ws.onopen = () => {
@@ -56,16 +56,21 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 
 //camera
 const aspect = canvas.clientWidth / canvas.clientHeight;
-const frustumSize = 10;
-const camera = new THREE.OrthographicCamera(
-  (frustumSize * aspect) / -2,
-  (frustumSize * aspect) / 2,
-  frustumSize / 2,
-  frustumSize / -2,
-  0.1,
-  1000
-);
-camera.position.z = 5;
+function makeCamera(aspect)
+{
+  const frustumSize = 10;
+  let camera = new THREE.OrthographicCamera(
+    (frustumSize * aspect) / -2,
+    (frustumSize * aspect) / 2,
+    frustumSize / 2,
+    frustumSize / -2,
+    0.1,
+    1000
+  );
+  camera.position.z = 5;
+  return camera;
+}
+let camera = makeCamera(aspect);
 
 //circles
 const player1 = new Circle(0x00ff00);
@@ -77,6 +82,11 @@ let up = false;
 let down = false;
 let left = false;
 let right = false;
+
+document.defaultView.addEventListener("resize", (e) => {
+  const aspect = canvas.clientWidth / canvas.clientHeight;
+  camera = makeCamera(aspect);
+});
 
 document.addEventListener("keydown", (e) => {
   if (e.key === "ArrowUp") {
@@ -172,8 +182,8 @@ function updateGame() {
     }
   }
 
-  player1.mesh.position.x += player1.vx;
-  player1.mesh.position.y += player1.vy;
+  player1.x += player1.vx;
+  player1.y += player1.vy;
 }
 
 function updateServer() {
@@ -197,6 +207,18 @@ function updateServer() {
 }
 
 function renderLoop() {
+  players.forEach((player1) => {
+    if (player1.mesh.position.x !== player1.x) {
+      const diff = player1.x - player1.mesh.position.x;
+      player1.mesh.position.x += 0.7 * diff;
+    }
+  
+    if (player1.mesh.position.y !== player1.y) {
+      const diff = player1.y - player1.mesh.position.y;
+      player1.mesh.position.y += 0.7 * diff;
+    }
+  });
+
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.render(scene, camera);
   requestAnimationFrame(renderLoop);
@@ -210,15 +232,15 @@ function handlePositionUpdate(json) {
   }
 
   const player = players.get(json.userId);
-  player.mesh.position.x = json.payload.x;
-  player.mesh.position.y = json.payload.y;
+  player.x = json.payload.x;
+  player.y = json.payload.y;
 }
 
 function handleAuthoritativeUpdate(json) {
   Object.entries(json.payload.players).forEach(([userId, player]) => {
     var localPlayer = players.get(userId);
-    localPlayer.mesh.position.x = player.x;
-    localPlayer.mesh.position.y = player.y;
+    localPlayer.x = player.x;
+    localPlayer.y = player.y;
     localPlayer.vx = player.vx;
     localPlayer.vy = player.vy;
   });
