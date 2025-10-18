@@ -2,6 +2,7 @@ import * as THREE from "three";
 import Player from "./Player";
 import { handlePositionUpdate, handleAuthoritativeUpdate } from "./ws-utils";
 import { makeCamera } from "./three-utils";
+import Controls from "./Controls";
 
 const userId = crypto.randomUUID();
 console.log("client: " + userId);
@@ -9,6 +10,7 @@ const players = new Map();
 let sendFinalInputTick = false;
 
 const scene = new THREE.Scene();
+const controls = new Controls();
 
 //create client player
 const player1 = new Player(0x00ff00);
@@ -24,47 +26,10 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 const aspect = canvas.clientWidth / canvas.clientHeight;
 let camera = makeCamera(aspect);
 
-//control logic
-let up = false;
-let down = false;
-let left = false;
-let right = false;
-
 //update camera on resize
 document.defaultView.addEventListener("resize", (e) => {
   const aspect = canvas.clientWidth / canvas.clientHeight;
   camera = makeCamera(aspect);
-});
-
-//button press listeners
-document.addEventListener("keydown", (e) => {
-  if (e.key === "ArrowUp") {
-    up = true;
-  }
-  if (e.key === "ArrowDown") {
-    down = true;
-  }
-  if (e.key === "ArrowLeft") {
-    left = true;
-  }
-  if (e.key === "ArrowRight") {
-    right = true;
-  }
-});
-
-document.addEventListener("keyup", (e) => {
-  if (e.key === "ArrowUp") {
-    up = false;
-  }
-  if (e.key === "ArrowDown") {
-    down = false;
-  }
-  if (e.key === "ArrowLeft") {
-    left = false;
-  }
-  if (e.key === "ArrowRight") {
-    right = false;
-  }
 });
 
 //logic loops
@@ -91,16 +56,16 @@ function gameLoop() {
 }
 
 function updateGame() {
-  if (up && player1.vy < 0.1) {
+  if (controls.up && player1.vy < 0.1) {
     player1.vy += 0.01;
   }
-  if (down && player1.vy > -0.1) {
+  if (controls.down && player1.vy > -0.1) {
     player1.vy -= 0.01;
   }
-  if (left && player1.vx > -0.1) {
+  if (controls.left && player1.vx > -0.1) {
     player1.vx -= 0.01;
   }
-  if (right && player1.vx < 0.1) {
+  if (controls.right && player1.vx < 0.1) {
     player1.vx += 0.01;
   }
 
@@ -134,20 +99,27 @@ function updateGame() {
 
 function updateServer() {
   if (ws.readyState === WebSocket.OPEN) {
-    if (up || down || left || right || sendFinalInputTick) {
+    if (
+      controls.up ||
+      controls.down ||
+      controls.left ||
+      controls.right ||
+      sendFinalInputTick
+    ) {
       sendFinalInputTick = true;
       var message = {
         userId: userId,
         type: "INPUT",
         payload: {
-          up: up,
-          down: down,
-          left: left,
-          right: right,
+          up: controls.up,
+          down: controls.down,
+          left: controls.left,
+          right: controls.right,
         },
       };
       ws.send(JSON.stringify(message));
-      if (!up && !down && !left && !right) sendFinalInputTick = false;
+      if (!controls.up && !controls.down && !controls.left && !controls.right)
+        sendFinalInputTick = false;
     }
   }
 }
