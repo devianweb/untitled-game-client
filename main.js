@@ -1,20 +1,17 @@
 import * as THREE from "three";
-import { Circle } from "./Circle";
+import Player from "./Player";
+import { handlePositionUpdate, handleAuthoritativeUpdate } from "./ws-utils";
+import { makeCamera } from "./three-utils";
 
 const userId = crypto.randomUUID();
 console.log("client: " + userId);
 const players = new Map();
 let sendFinalInputTick = false;
 
-const randomHexColorCode = () => {
-  let n = (Math.random() * 0xfffff * 1000000).toString(16);
-  return "#" + n.slice(0, 6);
-};
-
 const scene = new THREE.Scene();
 
-//circles
-const player1 = new Circle(0x00ff00);
+//create client player
+const player1 = new Player(0x00ff00);
 players.set(userId, player1);
 scene.add(player1.mesh);
 
@@ -25,19 +22,6 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 
 //camera
 const aspect = canvas.clientWidth / canvas.clientHeight;
-function makeCamera(aspect) {
-  const frustumSize = 10;
-  let camera = new THREE.OrthographicCamera(
-    (frustumSize * aspect) / -2,
-    (frustumSize * aspect) / 2,
-    frustumSize / 2,
-    frustumSize / -2,
-    0.1,
-    1000
-  );
-  camera.position.z = 5;
-  return camera;
-}
 let camera = makeCamera(aspect);
 
 //control logic
@@ -46,11 +30,13 @@ let down = false;
 let left = false;
 let right = false;
 
+//update camera on resize
 document.defaultView.addEventListener("resize", (e) => {
   const aspect = canvas.clientWidth / canvas.clientHeight;
   camera = makeCamera(aspect);
 });
 
+//button press listeners
 document.addEventListener("keydown", (e) => {
   if (e.key === "ArrowUp") {
     up = true;
@@ -215,48 +201,13 @@ ws.onmessage = (event) => {
   var json = JSON.parse(event.data);
   // console.log(json);
   if (json.type === "POSITION") {
-    handlePositionUpdate(json);
+    handlePositionUpdate(json, players, scene);
   }
 
   if (json.type === "AUTHORITATIVE") {
-    handleAuthoritativeUpdate(json);
+    handleAuthoritativeUpdate(json, players, scene);
   }
 };
-
-function handlePositionUpdate(json) {
-  if (!players.has(json.userId)) {
-    const newPlayer = new Circle(randomHexColorCode());
-    players.set(json.userId, newPlayer);
-    scene.add(newPlayer.mesh);
-  }
-
-  const player = players.get(json.userId);
-  player.x = json.payload.x;
-  player.y = json.payload.y;
-}
-
-function handleAuthoritativeUpdate(json) {
-  if (!players.has(json.userId)) {
-    const newPlayer = new Circle(randomHexColorCode());
-    players.set(json.userId, newPlayer);
-    scene.add(newPlayer.mesh);
-  }
-
-  players.forEach((player, userId) => {
-    if (!Object.keys(json.payload.players).includes(userId)) {
-      scene.remove(player.mesh);
-      players.delete(userId);
-    }
-  });
-
-  Object.entries(json.payload.players).forEach(([userId, player]) => {
-    var localPlayer = players.get(userId);
-    localPlayer.x = player.x;
-    localPlayer.y = player.y;
-    localPlayer.vx = player.vx;
-    localPlayer.vy = player.vy;
-  });
-}
 
 gameLoop();
 renderLoop();
