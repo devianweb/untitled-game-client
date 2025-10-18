@@ -1,8 +1,11 @@
 import * as THREE from "three";
-import Player from "./Player";
-import { handlePositionUpdate, handleAuthoritativeUpdate } from "./ws-utils";
-import Controls from "./Controls";
-import Camera from "./Camera";
+import Player from "./classes/Player";
+import {
+  handlePositionUpdate,
+  handleAuthoritativeUpdate,
+} from "./utils/ws-utils";
+import Controls from "./classes/Controls";
+import Camera from "./classes/Camera";
 
 const userId = crypto.randomUUID();
 console.log("client: " + userId);

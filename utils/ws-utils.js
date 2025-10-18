@@ -1,5 +1,5 @@
 import { randomHexColorCode } from "./utils";
-import Player from "./Player";
+import Player from "../classes/Player";
 
 export function handlePositionUpdate(json, players, scene) {
   if (!players.has(json.userId)) {
