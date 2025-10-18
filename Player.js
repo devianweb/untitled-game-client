@@ -7,8 +7,8 @@ export default class Player {
   vy = 0;
 
   maxV = 0.1;
-  acceleration = maxV * 0.1;
-  deceleration = maxV * 0.025;
+  acceleration = this.maxV * 0.1;
+  deceleration = this.maxV * 0.025;
 
   mesh;
   controls;

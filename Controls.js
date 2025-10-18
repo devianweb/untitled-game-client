@@ -6,7 +6,6 @@ export default class Controls {
 
   constructor() {
     document.addEventListener("keydown", (e) => this.keyDown(e));
-
     document.addEventListener("keyup", (e) => this.keyUp(e));
   }
 

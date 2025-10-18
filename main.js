@@ -1,8 +1,8 @@
 import * as THREE from "three";
 import Player from "./Player";
 import { handlePositionUpdate, handleAuthoritativeUpdate } from "./ws-utils";
-import { makeCamera } from "./three-utils";
 import Controls from "./Controls";
+import Camera from "./Camera";
 
 const userId = crypto.randomUUID();
 console.log("client: " + userId);
@@ -23,14 +23,7 @@ const renderer = new THREE.WebGLRenderer({ canvas: canvas });
 renderer.setSize(window.innerWidth, window.innerHeight);
 
 //camera
-const aspect = canvas.clientWidth / canvas.clientHeight;
-let camera = makeCamera(aspect);
-
-//update camera on resize
-document.defaultView.addEventListener("resize", (e) => {
-  const aspect = canvas.clientWidth / canvas.clientHeight;
-  camera = makeCamera(aspect);
-});
+let camera = new Camera(canvas);
 
 //logic loops
 let lastUpdate = performance.now();
@@ -48,6 +41,7 @@ function gameLoop() {
     lastUpdate += timestep;
     if (tick % 600 == 0) {
       console.log(players);
+      console.log(camera);
     }
     tick++;
   }
@@ -96,7 +90,7 @@ function renderLoop() {
   });
 
   renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.render(scene, camera);
+  renderer.render(scene, camera.camera);
   requestAnimationFrame(renderLoop);
 }
 
