@@ -36,6 +36,7 @@ function gameLoop() {
 
   while (dt >= timestep) {
     player1.updatePlayerPosition();
+    camera.updateCameraPosition(player1);
     updateServer();
     dt -= timestep;
     lastUpdate += timestep;
@@ -43,6 +44,7 @@ function gameLoop() {
       console.log(players);
       console.log(camera);
     }
+
     tick++;
   }
 

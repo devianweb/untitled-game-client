@@ -47,6 +47,18 @@ export default class Camera {
     this.camera.updateProjectionMatrix();
   };
 
+  updateCameraPosition = (player) => {
+    if (this.camera.position.x !== player.mesh.position.x) {
+      const diff = player.mesh.position.x - this.camera.position.x;
+      this.camera.position.x += 0.1 * diff;
+    }
+
+    if (this.camera.position.y !== player.mesh.position.y) {
+      const diff = player.mesh.position.y - this.camera.position.y;
+      this.camera.position.y += 0.1 * diff;
+    }
+  };
+
   calculateAspect = () => {
     return this.canvas.clientWidth / this.canvas.clientHeight;
   };
