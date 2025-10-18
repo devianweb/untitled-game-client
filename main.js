@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { Circle } from "./Circle";
 
 const userId = crypto.randomUUID();
+console.log("client: " + userId);
 const players = new Map();
 let sendFinalInputTick = false;
 
@@ -10,44 +11,12 @@ const randomHexColorCode = () => {
   return "#" + n.slice(0, 6);
 };
 
-//WebSockets
-const status = document.getElementById("status");
-
-// Connect to the WebSocket server
-const ws = new WebSocket(`wss://semiglazed-too-kimberlie.ngrok-free.dev/ws/games/1337?userId=${userId}`);
-
-// Connection opened
-ws.onopen = () => {
-  status.textContent = "Connected to server";
-  status.style.color = "green";
-};
-
-// Handle errors
-ws.onerror = (error) => {
-  status.textContent = "Error: " + error.message;
-  status.style.color = "red";
-};
-
-// Handle connection close
-ws.onclose = () => {
-  status.textContent = "Disconnected from server";
-  status.style.color = "red";
-};
-
-// Handle message recieved
-ws.onmessage = (event) => {
-  var json = JSON.parse(event.data);
-  // console.log(json);
-  if (json.type === "POSITION") {
-    handlePositionUpdate(json);
-  }
-
-  if (json.type === "AUTHORITATIVE") {
-    handleAuthoritativeUpdate(json);
-  }
-};
-
 const scene = new THREE.Scene();
+
+//circles
+const player1 = new Circle(0x00ff00);
+players.set(userId, player1);
+scene.add(player1.mesh);
 
 //renderer
 let canvas = document.getElementById("canvas");
@@ -56,8 +25,7 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 
 //camera
 const aspect = canvas.clientWidth / canvas.clientHeight;
-function makeCamera(aspect)
-{
+function makeCamera(aspect) {
   const frustumSize = 10;
   let camera = new THREE.OrthographicCamera(
     (frustumSize * aspect) / -2,
@@ -71,11 +39,6 @@ function makeCamera(aspect)
   return camera;
 }
 let camera = makeCamera(aspect);
-
-//circles
-const player1 = new Circle(0x00ff00);
-players.set(userId, player1);
-scene.add(player1.mesh);
 
 //control logic
 let up = false;
@@ -212,7 +175,7 @@ function renderLoop() {
       const diff = player1.x - player1.mesh.position.x;
       player1.mesh.position.x += 0.7 * diff;
     }
-  
+
     if (player1.mesh.position.y !== player1.y) {
       const diff = player1.y - player1.mesh.position.y;
       player1.mesh.position.y += 0.7 * diff;
@@ -223,6 +186,45 @@ function renderLoop() {
   renderer.render(scene, camera);
   requestAnimationFrame(renderLoop);
 }
+
+//WebSockets
+const status = document.getElementById("status");
+
+// Connect to the WebSocket server
+const ws = new WebSocket(
+  `wss://semiglazed-too-kimberlie.ngrok-free.dev/ws/games/1337?userId=${userId}`
+);
+
+// Connection opened
+ws.onopen = () => {
+  status.textContent = "Connected to server";
+  status.style.color = "green";
+};
+
+// Handle errors
+ws.onerror = (error) => {
+  status.textContent = "Error: " + error.message;
+  status.style.color = "red";
+};
+
+// Handle connection close
+ws.onclose = () => {
+  status.textContent = "Disconnected from server";
+  status.style.color = "red";
+};
+
+// Handle message recieved
+ws.onmessage = (event) => {
+  var json = JSON.parse(event.data);
+  // console.log(json);
+  if (json.type === "POSITION") {
+    handlePositionUpdate(json);
+  }
+
+  if (json.type === "AUTHORITATIVE") {
+    handleAuthoritativeUpdate(json);
+  }
+};
 
 function handlePositionUpdate(json) {
   if (!players.has(json.userId)) {
@@ -237,6 +239,19 @@ function handlePositionUpdate(json) {
 }
 
 function handleAuthoritativeUpdate(json) {
+  if (!players.has(json.userId)) {
+    const newPlayer = new Circle(randomHexColorCode());
+    players.set(json.userId, newPlayer);
+    scene.add(newPlayer.mesh);
+  }
+
+  players.entries().forEach((userId, player) => {
+    if (!Object.keys(json.payload.players).includes(userId)) {
+      scene.remove(player.mesh);
+      players.delete(userId);
+    }
+  });
+
   Object.entries(json.payload.players).forEach(([userId, player]) => {
     var localPlayer = players.get(userId);
     localPlayer.x = player.x;
