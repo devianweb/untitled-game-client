@@ -96,10 +96,7 @@ function gameLoop() {
     dt -= timestep;
     lastUpdate += timestep;
     if (tick % 600 == 0) {
-      console.log("x: " + player1.mesh.position.x);
-      console.log("y: " + player1.mesh.position.y);
-      console.log("vx: " + player1.vx);
-      console.log("vy: " + player1.vy);
+      console.log(players);
     }
     tick++;
   }
@@ -245,7 +242,7 @@ function handleAuthoritativeUpdate(json) {
     scene.add(newPlayer.mesh);
   }
 
-  players.entries().forEach((userId, player) => {
+  players.forEach((player, userId) => {
     if (!Object.keys(json.payload.players).includes(userId)) {
       scene.remove(player.mesh);
       players.delete(userId);
