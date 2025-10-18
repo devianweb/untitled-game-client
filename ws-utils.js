@@ -3,7 +3,7 @@ import Player from "./Player";
 
 export function handlePositionUpdate(json, players, scene) {
   if (!players.has(json.userId)) {
-    const newPlayer = new Player(randomHexColorCode());
+    const newPlayer = new Player({ materialColor: randomHexColorCode() });
     players.set(json.userId, newPlayer);
     scene.add(newPlayer.mesh);
   }
@@ -15,7 +15,7 @@ export function handlePositionUpdate(json, players, scene) {
 
 export function handleAuthoritativeUpdate(json, players, scene) {
   if (!players.has(json.userId)) {
-    const newPlayer = new Player(randomHexColorCode());
+    const newPlayer = new Player({ materialColor: randomHexColorCode() });
     players.set(json.userId, newPlayer);
     scene.add(newPlayer.mesh);
   }

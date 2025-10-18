@@ -1,7 +1,8 @@
 import * as THREE from "three";
 import Player from "./Player";
 import { handlePositionUpdate, handleAuthoritativeUpdate } from "./ws-utils";
-import { makeCamera } from "./three-utils";
+import Controls from "./Controls";
+import Camera from "./Camera";
 
 const userId = crypto.randomUUID();
 console.log("client: " + userId);
@@ -9,9 +10,10 @@ const players = new Map();
 let sendFinalInputTick = false;
 
 const scene = new THREE.Scene();
+const controls = new Controls();
 
 //create client player
-const player1 = new Player(0x00ff00);
+const player1 = new Player({ controls: controls });
 players.set(userId, player1);
 scene.add(player1.mesh);
 
@@ -21,51 +23,7 @@ const renderer = new THREE.WebGLRenderer({ canvas: canvas });
 renderer.setSize(window.innerWidth, window.innerHeight);
 
 //camera
-const aspect = canvas.clientWidth / canvas.clientHeight;
-let camera = makeCamera(aspect);
-
-//control logic
-let up = false;
-let down = false;
-let left = false;
-let right = false;
-
-//update camera on resize
-document.defaultView.addEventListener("resize", (e) => {
-  const aspect = canvas.clientWidth / canvas.clientHeight;
-  camera = makeCamera(aspect);
-});
-
-//button press listeners
-document.addEventListener("keydown", (e) => {
-  if (e.key === "ArrowUp") {
-    up = true;
-  }
-  if (e.key === "ArrowDown") {
-    down = true;
-  }
-  if (e.key === "ArrowLeft") {
-    left = true;
-  }
-  if (e.key === "ArrowRight") {
-    right = true;
-  }
-});
-
-document.addEventListener("keyup", (e) => {
-  if (e.key === "ArrowUp") {
-    up = false;
-  }
-  if (e.key === "ArrowDown") {
-    down = false;
-  }
-  if (e.key === "ArrowLeft") {
-    left = false;
-  }
-  if (e.key === "ArrowRight") {
-    right = false;
-  }
-});
+let camera = new Camera(canvas);
 
 //logic loops
 let lastUpdate = performance.now();
@@ -77,77 +35,45 @@ function gameLoop() {
   let dt = now - lastUpdate;
 
   while (dt >= timestep) {
-    updateGame();
+    player1.updatePlayerPosition();
+    camera.updateCameraPosition(player1);
     updateServer();
     dt -= timestep;
     lastUpdate += timestep;
     if (tick % 600 == 0) {
       console.log(players);
+      console.log(camera);
     }
+
     tick++;
   }
 
   setTimeout(gameLoop, 0);
 }
 
-function updateGame() {
-  if (up && player1.vy < 0.1) {
-    player1.vy += 0.01;
-  }
-  if (down && player1.vy > -0.1) {
-    player1.vy -= 0.01;
-  }
-  if (left && player1.vx > -0.1) {
-    player1.vx -= 0.01;
-  }
-  if (right && player1.vx < 0.1) {
-    player1.vx += 0.01;
-  }
-
-  if (player1.vx > 0) {
-    player1.vx -= 0.0025;
-    if (player1.vx < 0.005) {
-      player1.vx = 0;
-    }
-  } else if (player1.vx < 0) {
-    player1.vx += 0.0025;
-    if (player1.vx > -0.005) {
-      player1.vx = 0;
-    }
-  }
-
-  if (player1.vy > 0) {
-    player1.vy -= 0.0025;
-    if (player1.vy < 0.005) {
-      player1.vy = 0;
-    }
-  } else if (player1.vy < 0) {
-    player1.vy += 0.0025;
-    if (player1.vy > -0.005) {
-      player1.vy = 0;
-    }
-  }
-
-  player1.x += player1.vx;
-  player1.y += player1.vy;
-}
-
 function updateServer() {
   if (ws.readyState === WebSocket.OPEN) {
-    if (up || down || left || right || sendFinalInputTick) {
+    if (
+      controls.up ||
+      controls.down ||
+      controls.left ||
+      controls.right ||
+      sendFinalInputTick
+    ) {
       sendFinalInputTick = true;
       var message = {
         userId: userId,
         type: "INPUT",
         payload: {
-          up: up,
-          down: down,
-          left: left,
-          right: right,
+          up: controls.up,
+          down: controls.down,
+          left: controls.left,
+          right: controls.right,
         },
       };
       ws.send(JSON.stringify(message));
-      if (!up && !down && !left && !right) sendFinalInputTick = false;
+      if (!controls.up && !controls.down && !controls.left && !controls.right)
+        sendFinalInputTick = false;
     }
   }
 }
@@ -166,7 +92,7 @@ function renderLoop() {
   });
 
   renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.render(scene, camera);
+  renderer.render(scene, camera.camera);
   requestAnimationFrame(renderLoop);
 }
 
