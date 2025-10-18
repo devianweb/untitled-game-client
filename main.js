@@ -13,7 +13,7 @@ const scene = new THREE.Scene();
 const controls = new Controls();
 
 //create client player
-const player1 = new Player(0x00ff00);
+const player1 = new Player({ controls: controls });
 players.set(userId, player1);
 scene.add(player1.mesh);
 
@@ -42,7 +42,7 @@ function gameLoop() {
   let dt = now - lastUpdate;
 
   while (dt >= timestep) {
-    updateGame();
+    player1.updatePlayerPosition();
     updateServer();
     dt -= timestep;
     lastUpdate += timestep;
@@ -53,48 +53,6 @@ function gameLoop() {
   }
 
   setTimeout(gameLoop, 0);
-}
-
-function updateGame() {
-  if (controls.up && player1.vy < 0.1) {
-    player1.vy += 0.01;
-  }
-  if (controls.down && player1.vy > -0.1) {
-    player1.vy -= 0.01;
-  }
-  if (controls.left && player1.vx > -0.1) {
-    player1.vx -= 0.01;
-  }
-  if (controls.right && player1.vx < 0.1) {
-    player1.vx += 0.01;
-  }
-
-  if (player1.vx > 0) {
-    player1.vx -= 0.0025;
-    if (player1.vx < 0.005) {
-      player1.vx = 0;
-    }
-  } else if (player1.vx < 0) {
-    player1.vx += 0.0025;
-    if (player1.vx > -0.005) {
-      player1.vx = 0;
-    }
-  }
-
-  if (player1.vy > 0) {
-    player1.vy -= 0.0025;
-    if (player1.vy < 0.005) {
-      player1.vy = 0;
-    }
-  } else if (player1.vy < 0) {
-    player1.vy += 0.0025;
-    if (player1.vy > -0.005) {
-      player1.vy = 0;
-    }
-  }
-
-  player1.x += player1.vx;
-  player1.y += player1.vy;
 }
 
 function updateServer() {
