@@ -24,6 +24,10 @@ let canvas = document.getElementById("canvas");
 const renderer = new THREE.WebGLRenderer({ canvas: canvas });
 renderer.setSize(window.innerWidth, window.innerHeight);
 
+window.addEventListener("resize", () => {
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
 //camera
 let camera = new Camera(canvas);
 
