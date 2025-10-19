@@ -35,7 +35,7 @@ const vertices = [];
 for (let i = 0; i < 10000; i++) {
   vertices.push(THREE.MathUtils.randFloatSpread(100)); // x
   vertices.push(THREE.MathUtils.randFloatSpread(100)); // y
-  vertices.push(1); // z
+  vertices.push(-1); // z
 }
 
 geometry.setAttribute(
