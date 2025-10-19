@@ -4,6 +4,7 @@ import {
   handlePositionUpdate,
   handleAuthoritativeUpdate,
 } from "./utils/ws-utils";
+import { replayInput } from "./utils/state-replay";
 import Controls from "./classes/Controls";
 import Camera from "./classes/Camera";
 
@@ -11,6 +12,10 @@ const userId = crypto.randomUUID();
 console.log("client: " + userId);
 const players = new Map();
 let sendFinalInputTick = false;
+
+// Input sequence tracking for prediction/reconciliation
+let inputSeq = 0;
+const pendingInputs = [];
 
 const scene = new THREE.Scene();
 const controls = new Controls();
@@ -32,17 +37,25 @@ let camera = new Camera(canvas);
 let lastUpdate = performance.now();
 const timestep = 1000 / 60;
 let tick = 0;
+let accumulator = 0;
 
-function gameLoop() {
-  const now = performance.now();
-  let dt = now - lastUpdate;
+function gameLoop(currentTime) {
+  const deltaTime = currentTime - lastUpdate;
+  lastUpdate = currentTime;
+  accumulator += deltaTime;
 
-  while (dt >= timestep) {
-    player1.updatePlayerPosition();
+  while (accumulator >= timestep) {
+    // Apply local prediction by replaying the current input state
+    replayInput(player1, {
+      up: controls.up,
+      down: controls.down,
+      left: controls.left,
+      right: controls.right,
+    });
+    
     camera.updateCameraPosition(player1);
     updateServer();
-    dt -= timestep;
-    lastUpdate += timestep;
+    accumulator -= timestep;
     if (tick % 600 == 0) {
       console.log(players);
       console.log(camera);
@@ -51,7 +64,7 @@ function gameLoop() {
     tick++;
   }
 
-  setTimeout(gameLoop, 0);
+  requestAnimationFrame(gameLoop);
 }
 
 function updateServer() {
@@ -64,17 +77,21 @@ function updateServer() {
       sendFinalInputTick
     ) {
       sendFinalInputTick = true;
+      inputSeq++;
+      const input = {
+        seq: inputSeq,
+        up: controls.up,
+        down: controls.down,
+        left: controls.left,
+        right: controls.right,
+      };
       var message = {
         userId: userId,
         type: "INPUT",
-        payload: {
-          up: controls.up,
-          down: controls.down,
-          left: controls.left,
-          right: controls.right,
-        },
+        payload: input,
       };
       ws.send(JSON.stringify(message));
+      pendingInputs.push(input);
       if (!controls.up && !controls.down && !controls.left && !controls.right)
         sendFinalInputTick = false;
     }
@@ -82,15 +99,19 @@ function updateServer() {
 }
 
 function renderLoop() {
-  players.forEach((player1) => {
-    if (player1.mesh.position.x !== player1.x) {
-      const diff = player1.x - player1.mesh.position.x;
-      player1.mesh.position.x += 0.7 * diff;
+  players.forEach((player, playerId) => {
+    const isLocalPlayer = playerId === userId;
+    
+    if (player.mesh.position.x !== player.x) {
+      const diff = player.x - player.mesh.position.x;
+      // Direct assignment for local player, smooth interpolation for remote
+      player.mesh.position.x += isLocalPlayer ? diff : 0.7 * diff;
     }
 
-    if (player1.mesh.position.y !== player1.y) {
-      const diff = player1.y - player1.mesh.position.y;
-      player1.mesh.position.y += 0.7 * diff;
+    if (player.mesh.position.y !== player.y) {
+      const diff = player.y - player.mesh.position.y;
+      // Direct assignment for local player, smooth interpolation for remote
+      player.mesh.position.y += isLocalPlayer ? diff : 0.7 * diff;
     }
   });
 
@@ -130,7 +151,7 @@ ws.onmessage = (event) => {
   var json = JSON.parse(event.data);
   // console.log(json);
   if (json.type === "POSITION") {
-    handlePositionUpdate(json, players, scene);
+    handlePositionUpdate(json, players, scene, { userId, pendingInputs });
   }
 
   if (json.type === "AUTHORITATIVE") {
@@ -138,5 +159,5 @@ ws.onmessage = (event) => {
   }
 };
 
-gameLoop();
+requestAnimationFrame(gameLoop);
 renderLoop();
