@@ -17,6 +17,15 @@ let sendFinalInputTick = false;
 let inputSeq = 0;
 const pendingInputs = [];
 
+// Helper to create input object from current controls state
+const createInputFromControls = (controls, seq = null) => ({
+  ...(seq !== null && { seq }),
+  up: controls.up,
+  down: controls.down,
+  left: controls.left,
+  right: controls.right,
+});
+
 const scene = new THREE.Scene();
 const controls = new Controls();
 
@@ -46,12 +55,7 @@ function gameLoop(currentTime) {
 
   while (accumulator >= timestep) {
     // Apply local prediction by replaying the current input state
-    replayInput(player1, {
-      up: controls.up,
-      down: controls.down,
-      left: controls.left,
-      right: controls.right,
-    });
+    replayInput(player1, createInputFromControls(controls));
     
     camera.updateCameraPosition(player1);
     updateServer();
@@ -78,13 +82,7 @@ function updateServer() {
     ) {
       sendFinalInputTick = true;
       inputSeq++;
-      const input = {
-        seq: inputSeq,
-        up: controls.up,
-        down: controls.down,
-        left: controls.left,
-        right: controls.right,
-      };
+      const input = createInputFromControls(controls, inputSeq);
       var message = {
         userId: userId,
         type: "INPUT",

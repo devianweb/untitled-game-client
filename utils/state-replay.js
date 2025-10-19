@@ -1,6 +1,9 @@
 /**
  * Replay a single input on a player using deterministic physics
  * This mirrors the server-side physics order: acceleration -> friction -> apply velocity
+ * 
+ * @param {Object} player - Player object with properties: x, y, vx, vy, maxV, acceleration, deceleration
+ * @param {Object} input - Input object with boolean properties: up, down, left, right
  */
 export function replayInput(player, input) {
   // Apply acceleration based on input
