@@ -11,9 +11,11 @@ export function handlePositionUpdate(json, players, scene) {
   const player = players.get(json.userId);
   player.x = json.payload.x;
   player.y = json.payload.y;
+  player.vx = json.payload.vx;
+  player.vy = json.payload.vy;
 }
 
-export function handleAuthoritativeUpdate(json, players, scene) {
+export function handleAuthoritativeUpdate(json, players, scene, clientId) {
   if (!players.has(json.userId)) {
     const newPlayer = new Player({ materialColor: randomHexColorCode() });
     players.set(json.userId, newPlayer);
@@ -34,6 +36,9 @@ export function handleAuthoritativeUpdate(json, players, scene) {
       localPlayer.y = player.y;
       localPlayer.vx = player.vx;
       localPlayer.vy = player.vy;
+      if (userId === clientId) {
+        localPlayer.reconcile(json.seqId);
+      }
     }
   });
 }
