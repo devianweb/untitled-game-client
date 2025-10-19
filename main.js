@@ -10,7 +10,6 @@ import Camera from "./classes/Camera";
 const userId = crypto.randomUUID();
 console.log("client: " + userId);
 const players = new Map();
-let sendFinalInputTick = false;
 
 const scene = new THREE.Scene();
 const controls = new Controls();
@@ -49,10 +48,15 @@ const particles = new THREE.Points(
 );
 scene.add(particles);
 
+//coordinates
+const coordinates = document.getElementById("coordinates");
+
 //logic loops
 let lastUpdate = performance.now();
 const timestep = 1000 / 60;
 let tick = 0;
+let seqId = 0;
+let sendFinalInputTick = false;
 
 function gameLoop() {
   const now = performance.now();
@@ -68,56 +72,62 @@ function gameLoop() {
       console.log(players);
       console.log(camera);
     }
+    coordinates.textContent = `${player1.x}, ${player1.y}`;
 
     tick++;
   }
 
-  setTimeout(gameLoop, 0);
+  requestAnimationFrame(gameLoop);
 }
 
 function updateServer() {
   if (ws.readyState === WebSocket.OPEN) {
     if (
-      controls.up ||
-      controls.down ||
-      controls.left ||
-      controls.right ||
+      controls.inputs.up ||
+      controls.inputs.down ||
+      controls.inputs.left ||
+      controls.inputs.right ||
       sendFinalInputTick
     ) {
       sendFinalInputTick = true;
       var message = {
         userId: userId,
         type: "INPUT",
-        payload: {
-          up: controls.up,
-          down: controls.down,
-          left: controls.left,
-          right: controls.right,
-        },
+        seqId: seqId,
+        payload: controls.inputs,
       };
       ws.send(JSON.stringify(message));
-      if (!controls.up && !controls.down && !controls.left && !controls.right)
+      controls.updateHistory(seqId);
+      seqId++;
+      if (
+        !controls.inputs.up &&
+        !controls.inputs.down &&
+        !controls.inputs.left &&
+        !controls.inputs.right
+      )
         sendFinalInputTick = false;
     }
   }
 }
 
 function renderLoop() {
-  players.forEach((player1) => {
-    if (player1.mesh.position.x !== player1.x) {
-      const diff = player1.x - player1.mesh.position.x;
-      player1.mesh.position.x += 0.7 * diff;
-    }
+  players.forEach((player1, uid) => {
+    if (uid === userId) {
+      player1.mesh.position.x = player1.x;
+      player1.mesh.position.y = player1.y;
+    } else {
+      if (player1.mesh.position.x !== player1.x) {
+        const diff = player1.x - player1.mesh.position.x;
+        player1.mesh.position.x += 0.7 * diff;
+      }
 
-    if (player1.mesh.position.y !== player1.y) {
-      const diff = player1.y - player1.mesh.position.y;
-      player1.mesh.position.y += 0.7 * diff;
+      if (player1.mesh.position.y !== player1.y) {
+        const diff = player1.y - player1.mesh.position.y;
+        player1.mesh.position.y += 0.7 * diff;
+      }
     }
   });
-
-  renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.render(scene, camera.camera);
-  requestAnimationFrame(renderLoop);
 }
 
 //WebSockets
@@ -155,9 +165,9 @@ ws.onmessage = (event) => {
   }
 
   if (json.type === "AUTHORITATIVE") {
-    handleAuthoritativeUpdate(json, players, scene);
+    handleAuthoritativeUpdate(json, players, scene, userId);
   }
 };
 
-gameLoop();
-renderLoop();
+requestAnimationFrame(gameLoop);
+renderer.setAnimationLoop(renderLoop);

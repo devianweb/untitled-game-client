@@ -15,7 +15,16 @@ body {
 #status {
   position: absolute;
   font-weight: bold;
-  top: 0;
-  left: 0;
+  top: 8px;
+  left: 8px;
+  z-index: 1;
+}
+
+#coordinates {
+  position: absolute;
+  font-weight: bold;
+  color: green;
+  top: 8px;
+  right: 8px;
   z-index: 1;
 }

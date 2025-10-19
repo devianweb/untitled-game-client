@@ -1,41 +1,49 @@
 export default class Controls {
-  up = false;
-  down = false;
-  left = false;
-  right = false;
+  inputs = {
+    up: false,
+    down: false,
+    left: false,
+    right: false,
+  };
+
+  history = [];
 
   constructor() {
     document.addEventListener("keydown", (e) => this.keyDown(e));
     document.addEventListener("keyup", (e) => this.keyUp(e));
   }
 
+  updateHistory = (seqId) => {
+    this.history.push({ seqId, inputs: { ...this.inputs } });
+  };
+
   keyDown = (e) => {
     if (e.key === "ArrowUp") {
-      this.up = true;
+      this.inputs.up = true;
     }
     if (e.key === "ArrowDown") {
-      this.down = true;
+      this.inputs.down = true;
     }
     if (e.key === "ArrowLeft") {
-      this.left = true;
+      this.inputs.left = true;
     }
     if (e.key === "ArrowRight") {
-      this.right = true;
+      this.inputs.right = true;
     }
   };
 
   keyUp = (e) => {
     if (e.key === "ArrowUp") {
-      this.up = false;
+      this.inputs.up = false;
     }
     if (e.key === "ArrowDown") {
-      this.down = false;
+      this.inputs.down = false;
     }
     if (e.key === "ArrowLeft") {
-      this.left = false;
+      this.inputs.left = false;
     }
     if (e.key === "ArrowRight") {
-      this.right = false;
+      this.inputs.right = false;
     }
   };
 }

@@ -20,17 +20,36 @@ export default class Player {
     this.controls = controls;
   }
 
+  reconcile = (serverSeqId) => {
+    let count = 0;
+    for (let i = 0; i < this.controls.history.length; i++) {
+      if (this.controls.history[i].seqId > serverSeqId) {
+        this.updatePlayerPositionWithInputs(this.controls.history[i].inputs);
+        count++;
+      }
+    }
+
+    this.controls.history = this.controls.history.filter(
+      (h) => h.seqId > serverSeqId
+    );
+    console.log("reconciled " + count + " inputs");
+  };
+
   updatePlayerPosition = () => {
-    if (this.controls.up && this.vy < this.maxV) {
+    this.updatePlayerPositionWithInputs(this.controls.inputs);
+  };
+
+  updatePlayerPositionWithInputs = (inputs) => {
+    if (inputs.up && this.vy < this.maxV) {
       this.vy += this.acceleration;
     }
-    if (this.controls.down && this.vy > -this.maxV) {
+    if (inputs.down && this.vy > -this.maxV) {
       this.vy -= this.acceleration;
     }
-    if (this.controls.left && this.vx > -this.maxV) {
+    if (inputs.left && this.vx > -this.maxV) {
       this.vx -= this.acceleration;
     }
-    if (this.controls.right && this.vx < this.maxV) {
+    if (inputs.right && this.vx < this.maxV) {
       this.vx += this.acceleration;
     }
 
