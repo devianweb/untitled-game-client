@@ -28,6 +28,27 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 //camera
 let camera = new Camera(canvas);
 
+//background
+const geometry = new THREE.BufferGeometry();
+const vertices = [];
+
+for (let i = 0; i < 10000; i++) {
+  vertices.push(THREE.MathUtils.randFloatSpread(100)); // x
+  vertices.push(THREE.MathUtils.randFloatSpread(100)); // y
+  vertices.push(-1); // z
+}
+
+geometry.setAttribute(
+  "position",
+  new THREE.Float32BufferAttribute(vertices, 3)
+);
+
+const particles = new THREE.Points(
+  geometry,
+  new THREE.PointsMaterial({ color: 0x888888 })
+);
+scene.add(particles);
+
 //logic loops
 let lastUpdate = performance.now();
 const timestep = 1000 / 60;
