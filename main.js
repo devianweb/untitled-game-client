@@ -34,6 +34,7 @@ let camera = new Camera(canvas);
 //background
 const geometry = new THREE.BufferGeometry();
 const vertices = [];
+let messages = [];
 
 for (let i = 0; i < 10000; i++) {
   vertices.push(THREE.MathUtils.randFloatSpread(100)); // x
@@ -67,9 +68,22 @@ function gameLoop() {
   let dt = now - lastUpdate;
 
   while (dt >= timestep) {
+    messages.forEach((json) => {
+      // console.log(json);
+      if (json.type === "POSITION") {
+        handlePositionUpdate(json, players, scene);
+      }
+  
+      if (json.type === "AUTHORITATIVE") {
+        handleAuthoritativeUpdate(json, players, scene, userId);
+      }
+    });
+    while (messages.length > 0) messages.pop();
+
     player1.updatePlayerPosition();
     camera.updateCameraPosition(player1);
     updateServer();
+
     dt -= timestep;
     lastUpdate += timestep;
     if (tick % 600 == 0) {
@@ -116,19 +130,14 @@ function updateServer() {
 
 function renderLoop() {
   players.forEach((player1, uid) => {
-    if (uid === userId) {
-      player1.mesh.position.x = player1.x;
-      player1.mesh.position.y = player1.y;
-    } else {
-      if (player1.mesh.position.x !== player1.x) {
-        const diff = player1.x - player1.mesh.position.x;
-        player1.mesh.position.x += 0.7 * diff;
-      }
+    if (player1.mesh.position.x !== player1.x) {
+      const diff = player1.x - player1.mesh.position.x;
+      player1.mesh.position.x += 0.3 * diff;
+    }
 
-      if (player1.mesh.position.y !== player1.y) {
-        const diff = player1.y - player1.mesh.position.y;
-        player1.mesh.position.y += 0.7 * diff;
-      }
+    if (player1.mesh.position.y !== player1.y) {
+      const diff = player1.y - player1.mesh.position.y;
+      player1.mesh.position.y += 0.3 * diff;
     }
   });
   renderer.render(scene, camera.camera);
@@ -163,14 +172,7 @@ ws.onclose = () => {
 // Handle message recieved
 ws.onmessage = (event) => {
   var json = JSON.parse(event.data);
-  // console.log(json);
-  if (json.type === "POSITION") {
-    handlePositionUpdate(json, players, scene);
-  }
-
-  if (json.type === "AUTHORITATIVE") {
-    handleAuthoritativeUpdate(json, players, scene, userId);
-  }
+  messages.push(json);
 };
 
 requestAnimationFrame(gameLoop);
