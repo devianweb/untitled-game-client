@@ -72,8 +72,7 @@ function gameLoop() {
       // console.log(json);
       if (json.type === "POSITION") {
         handlePositionUpdate(json, players, scene);
-      }
-      else if (json.type === "AUTHORITATIVE") {
+      } else if (json.type === "AUTHORITATIVE") {
         handleAuthoritativeUpdate(json, players, scene, userId);
       }
     });
