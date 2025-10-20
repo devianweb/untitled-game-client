@@ -10,6 +10,7 @@ export default class Camera {
   canvas: HTMLCanvasElement;
   aspect: number;
   frustumSize: number = 10;
+  position: THREE.Vector3 = new THREE.Vector3(0, 0, 5);
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -47,15 +48,9 @@ export default class Camera {
   };
 
   updateCameraPosition = (player: Player): void => {
-    if (this.camera.position.x !== player.position.x) {
-      const diffX = player.position.x - this.camera.position.x;
-      this.camera.position.x += 0.1 * diffX;
-    }
-
-    if (this.camera.position.y !== player.position.y) {
-      const diffY = player.position.y - this.camera.position.y;
-      this.camera.position.y += 0.1 * diffY;
-    }
+    this.position.copy(player.position);
+    this.position.z = this.camera.position.z; // preserve camera depth
+    this.camera.position.lerp(this.position, 0.1);
   };
 
   calculateAspect = (): number => {
