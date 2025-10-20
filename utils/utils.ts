@@ -1,4 +1,4 @@
-export function randomHexColorCode(): string {
-  const n = (Math.random() * 0xfffff * 1_000_000).toString(16);
-  return "#" + n.slice(0, 6);
+export function randomHexColorCode(): number {
+  // Returns a random 24-bit color number (0x000000 - 0xFFFFFF)
+  return Math.floor(Math.random() * 0xffffff);
 }
