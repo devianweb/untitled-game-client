@@ -1,10 +1,6 @@
 import * as THREE from "three";
-import Controls, { ControlInputs } from "./Controls";
-
-interface PlayerConstructorOptions {
-  materialColor?: number;
-  controls?: Controls | null;
-}
+import Controls from "./Controls";
+import { ControlInputs, PlayerConstructorOptions } from "../types";
 
 export default class Player {
   x: number = 0;

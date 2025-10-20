@@ -1,14 +1,4 @@
-export interface ControlInputs {
-  up: boolean;
-  down: boolean;
-  left: boolean;
-  right: boolean;
-}
-
-export interface InputHistory {
-  seqId: number;
-  inputs: ControlInputs;
-}
+import { ControlInputs, InputHistoryEntry } from "../types";
 
 export default class Controls {
   inputs: ControlInputs = {
@@ -18,7 +8,7 @@ export default class Controls {
     right: false,
   };
 
-  history: InputHistory[] = [];
+  history: InputHistoryEntry[] = [];
 
   constructor() {
     // Bind event listeners for key presses

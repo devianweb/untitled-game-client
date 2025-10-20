@@ -3,17 +3,11 @@ import Player from "./classes/Player";
 import {
   handlePositionUpdate,
   handleAuthoritativeUpdate,
-  ServerMessage,
 } from "./utils/ws-utils";
+import { ServerMessage } from "./types";
 import Controls from "./classes/Controls";
 import Camera from "./classes/Camera";
-
-interface InputMessage {
-  userId: string;
-  type: "INPUT";
-  seqId: number;
-  payload: import("./classes/Controls").ControlInputs;
-}
+import { ControlInputs, InputMessage, OutboundMessage } from "./types";
 
 const userId: string = crypto.randomUUID();
 console.log("client: " + userId);

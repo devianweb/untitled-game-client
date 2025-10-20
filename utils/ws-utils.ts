@@ -1,34 +1,7 @@
 import { randomHexColorCode } from "./utils";
 import Player from "../classes/Player";
 import * as THREE from "three";
-
-export interface PositionPayload {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-}
-
-export interface PositionMessage {
-  type: "POSITION";
-  userId: string;
-  payload: PositionPayload;
-}
-
-export interface AuthoritativePlayersState {
-  [userId: string]: PositionPayload;
-}
-
-export interface AuthoritativeMessage {
-  type: "AUTHORITATIVE";
-  seqId: number;
-  userId: string;
-  payload: {
-    players: AuthoritativePlayersState;
-  };
-}
-
-export type ServerMessage = PositionMessage | AuthoritativeMessage;
+import { PositionMessage, AuthoritativeMessage } from "../types";
 
 export function handlePositionUpdate(
   json: PositionMessage,
