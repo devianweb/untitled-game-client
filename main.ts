@@ -4,42 +4,43 @@ import {
   handlePositionUpdate,
   handleAuthoritativeUpdate,
 } from "./utils/ws-utils";
+import { ServerMessage } from "./types";
 import Controls from "./classes/Controls";
 import Camera from "./classes/Camera";
+import { InputMessage } from "./types";
 
-const userId = crypto.randomUUID();
+const userId: string = crypto.randomUUID();
 console.log("client: " + userId);
-const players = new Map();
+const players: Map<string, Player> = new Map();
 
 const scene = new THREE.Scene();
 const controls = new Controls();
 
-//create client player
+// create client player
 const player1 = new Player({ controls: controls });
 players.set(userId, player1);
 scene.add(player1.mesh);
 
-//renderer
-let canvas = document.getElementById("canvas");
-const renderer = new THREE.WebGLRenderer({ canvas: canvas });
+// renderer
+const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+const renderer = new THREE.WebGLRenderer({ canvas });
 renderer.setSize(window.innerWidth, window.innerHeight);
 
 window.addEventListener("resize", () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-//camera
-let camera = new Camera(canvas);
+// camera
+const camera = new Camera(canvas);
 
-//background
+// background
 const geometry = new THREE.BufferGeometry();
-const vertices = [];
-let messages = [];
+const vertices: number[] = [];
 
 for (let i = 0; i < 10000; i++) {
-  vertices.push(THREE.MathUtils.randFloatSpread(100)); // x
-  vertices.push(THREE.MathUtils.randFloatSpread(100)); // y
-  vertices.push(-1); // z
+  vertices.push(THREE.MathUtils.randFloatSpread(100));
+  vertices.push(THREE.MathUtils.randFloatSpread(100));
+  vertices.push(-1);
 }
 
 geometry.setAttribute(
@@ -53,23 +54,24 @@ const particles = new THREE.Points(
 );
 scene.add(particles);
 
-//coordinates
-const coordinates = document.getElementById("coordinates");
+// coordinates
+const coordinates = document.getElementById("coordinates") as HTMLDivElement;
 
-//logic loops
+// logic loops
 let lastUpdate = performance.now();
 const timestep = 1000 / 60;
 let tick = 0;
 let seqId = 0;
 let sendFinalInputTick = false;
+let messages: ServerMessage[] = [];
 
 function gameLoop() {
   const now = performance.now();
   let dt = now - lastUpdate;
 
   while (dt >= timestep) {
+    // console.log(json);
     messages.forEach((json) => {
-      // console.log(json);
       if (json.type === "POSITION") {
         handlePositionUpdate(json, players, scene);
       } else if (json.type === "AUTHORITATIVE") {
@@ -84,11 +86,11 @@ function gameLoop() {
 
     dt -= timestep;
     lastUpdate += timestep;
-    if (tick % 600 == 0) {
+    if (tick % 600 === 0) {
       console.log(players);
       console.log(camera);
     }
-    coordinates.textContent = `${player1.x}, ${player1.y}`;
+    coordinates.textContent = `${player1.position.x}, ${player1.position.y}`;
 
     tick++;
   }
@@ -106,7 +108,7 @@ function updateServer() {
       sendFinalInputTick
     ) {
       sendFinalInputTick = true;
-      var message = {
+      const message: InputMessage = {
         userId: userId,
         type: "INPUT",
         seqId: seqId,
@@ -127,50 +129,52 @@ function updateServer() {
 }
 
 function renderLoop() {
-  players.forEach((player1, uid) => {
-    if (player1.mesh.position.x !== player1.x) {
-      const diff = player1.x - player1.mesh.position.x;
-      player1.mesh.position.x += 0.3 * diff;
+  players.forEach((p) => {
+    if (p.mesh.position.x !== p.position.x) {
+      const diffX: number = p.position.x - p.mesh.position.x;
+      p.mesh.position.x += 0.3 * diffX;
     }
 
-    if (player1.mesh.position.y !== player1.y) {
-      const diff = player1.y - player1.mesh.position.y;
-      player1.mesh.position.y += 0.3 * diff;
+    if (p.mesh.position.y !== p.position.y) {
+      const diffY: number = p.position.y - p.mesh.position.y;
+      p.mesh.position.y += 0.3 * diffY;
     }
   });
   renderer.render(scene, camera.camera);
 }
 
-//WebSockets
-const status = document.getElementById("status");
+// WebSockets
+const status = document.getElementById("status") as HTMLDivElement;
 
 // Connect to the WebSocket server
 const ws = new WebSocket(
   `wss://semiglazed-too-kimberlie.ngrok-free.dev/ws/games/1337?userId=${userId}`
 );
 
-// Connection opened
 ws.onopen = () => {
   status.textContent = "Connected to server";
   status.style.color = "green";
 };
 
-// Handle errors
-ws.onerror = (error) => {
-  status.textContent = "Error: " + error.message;
+ws.onerror = (error: Event) => {
+  // WebSocket error is broadly typed; narrow if needed later
+  status.textContent = "Error";
   status.style.color = "red";
+  console.error(error);
 };
 
-// Handle connection close
 ws.onclose = () => {
   status.textContent = "Disconnected from server";
   status.style.color = "red";
 };
 
-// Handle message recieved
-ws.onmessage = (event) => {
-  var json = JSON.parse(event.data);
-  messages.push(json);
+ws.onmessage = (event: MessageEvent<string>) => {
+  try {
+    const json: ServerMessage = JSON.parse(event.data);
+    messages.push(json);
+  } catch (e) {
+    console.warn("Received malformed message", e);
+  }
 };
 
 requestAnimationFrame(gameLoop);
