@@ -3,10 +3,8 @@ import Controls from "./Controls";
 import { ControlInputs, PlayerConstructorOptions } from "../types";
 
 export default class Player {
-  x: number = 0;
-  y: number = 0;
-  vx: number = 0;
-  vy: number = 0;
+  position: THREE.Vector3 = new THREE.Vector3();
+  velocity: THREE.Vector3 = new THREE.Vector3();
 
   maxV: number = 0.1;
   acceleration: number = this.maxV * 0.1;
@@ -31,61 +29,20 @@ export default class Player {
   ): void => {
     if (!this.controls) return;
 
-    let tempX = player.x;
-    let tempY = player.y;
-    let tempVx = player.vx;
-    let tempVy = player.vy;
+    const serverPos = new THREE.Vector3(player.x, player.y, 0);
+    const serverVel = new THREE.Vector3(player.vx, player.vy, 0);
 
     for (let i = 0; i < this.controls.history.length; i++) {
       const entry = this.controls.history[i];
       const inputs = entry.inputs;
       if (entry.seqId > serverSeqId) {
-        if (inputs.up && tempVy < this.maxV) {
-          tempVy += this.acceleration;
-        }
-        if (inputs.down && tempVy > -this.maxV) {
-          tempVy -= this.acceleration;
-        }
-        if (inputs.left && tempVx > -this.maxV) {
-          tempVx -= this.acceleration;
-        }
-        if (inputs.right && tempVx < this.maxV) {
-          tempVx += this.acceleration;
-        }
-
-        if (tempVx > 0) {
-          tempVx -= this.deceleration;
-          if (tempVx < 0.005) {
-            tempVx = 0;
-          }
-        } else if (tempVx < 0) {
-          tempVx += this.deceleration;
-          if (tempVx > -0.005) {
-            tempVx = 0;
-          }
-        }
-
-        if (tempVy > 0) {
-          tempVy -= this.deceleration;
-          if (tempVy < 0.005) {
-            tempVy = 0;
-          }
-        } else if (tempVy < 0) {
-          tempVy += this.deceleration;
-          if (tempVy > -0.005) {
-            tempVy = 0;
-          }
-        }
-
-        tempX += tempVx;
-        tempY += tempVy;
+        const newPos = this.calculateNewPosition(serverPos, serverVel, inputs);
+        serverPos.copy(newPos);
       }
     }
 
-    this.x = tempX;
-    this.y = tempY;
-    this.vx = tempVx;
-    this.vy = tempVy;
+    this.position.copy(serverPos);
+    this.velocity.copy(serverVel);
 
     this.controls.history = this.controls.history.filter(
       (h) => h.seqId > serverSeqId
@@ -94,48 +51,49 @@ export default class Player {
 
   updatePlayerPosition = (): void => {
     if (!this.controls) return;
-    this.updatePlayerPositionWithInputs(this.controls.inputs);
+    this.position.copy(
+      this.calculateNewPosition(
+        this.position,
+        this.velocity,
+        this.controls.inputs
+      )
+    );
   };
 
-  updatePlayerPositionWithInputs = (inputs: ControlInputs): void => {
-    if (inputs.up && this.vy < this.maxV) {
-      this.vy += this.acceleration;
-    }
-    if (inputs.down && this.vy > -this.maxV) {
-      this.vy -= this.acceleration;
-    }
-    if (inputs.left && this.vx > -this.maxV) {
-      this.vx -= this.acceleration;
-    }
-    if (inputs.right && this.vx < this.maxV) {
-      this.vx += this.acceleration;
+  calculateNewPosition = (
+    currentPosition: THREE.Vector3,
+    currentVelocity: THREE.Vector3,
+    inputs: ControlInputs
+  ): THREE.Vector3 => {
+    // Apply input acceleration
+    if (inputs.up && currentVelocity.y < this.maxV)
+      currentVelocity.y += this.acceleration;
+    if (inputs.down && currentVelocity.y > -this.maxV)
+      currentVelocity.y -= this.acceleration;
+    if (inputs.left && currentVelocity.x > -this.maxV)
+      currentVelocity.x -= this.acceleration;
+    if (inputs.right && currentVelocity.x < this.maxV)
+      currentVelocity.x += this.acceleration;
+
+    // Deceleration X
+    if (currentVelocity.x > 0) {
+      currentVelocity.x -= this.deceleration;
+      if (currentVelocity.x < 0.005) currentVelocity.x = 0;
+    } else if (currentVelocity.x < 0) {
+      currentVelocity.x += this.deceleration;
+      if (currentVelocity.x > -0.005) currentVelocity.x = 0;
     }
 
-    if (this.vx > 0) {
-      this.vx -= this.deceleration;
-      if (this.vx < 0.005) {
-        this.vx = 0;
-      }
-    } else if (this.vx < 0) {
-      this.vx += this.deceleration;
-      if (this.vx > -0.005) {
-        this.vx = 0;
-      }
+    // Deceleration Y
+    if (currentVelocity.y > 0) {
+      currentVelocity.y -= this.deceleration;
+      if (currentVelocity.y < 0.005) currentVelocity.y = 0;
+    } else if (currentVelocity.y < 0) {
+      currentVelocity.y += this.deceleration;
+      if (currentVelocity.y > -0.005) currentVelocity.y = 0;
     }
 
-    if (this.vy > 0) {
-      this.vy -= this.deceleration;
-      if (this.vy < 0.005) {
-        this.vy = 0;
-      }
-    } else if (this.vy < 0) {
-      this.vy += this.deceleration;
-      if (this.vy > -0.005) {
-        this.vy = 0;
-      }
-    }
-
-    this.x += this.vx;
-    this.y += this.vy;
+    // return new position
+    return currentPosition.add(currentVelocity);
   };
 }

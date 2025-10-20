@@ -7,7 +7,7 @@ import {
 import { ServerMessage } from "./types";
 import Controls from "./classes/Controls";
 import Camera from "./classes/Camera";
-import { ControlInputs, InputMessage, OutboundMessage } from "./types";
+import { InputMessage } from "./types";
 
 const userId: string = crypto.randomUUID();
 console.log("client: " + userId);
@@ -90,7 +90,7 @@ function gameLoop() {
       console.log(players);
       console.log(camera);
     }
-    coordinates.textContent = `${player1.x}, ${player1.y}`;
+    coordinates.textContent = `${player1.position.x}, ${player1.position.y}`;
 
     tick++;
   }
@@ -130,13 +130,13 @@ function updateServer() {
 
 function renderLoop() {
   players.forEach((p) => {
-    if (p.mesh.position.x !== p.x) {
-      const diffX: number = p.x - p.mesh.position.x;
+    if (p.mesh.position.x !== p.position.x) {
+      const diffX: number = p.position.x - p.mesh.position.x;
       p.mesh.position.x += 0.3 * diffX;
     }
 
-    if (p.mesh.position.y !== p.y) {
-      const diffY: number = p.y - p.mesh.position.y;
+    if (p.mesh.position.y !== p.position.y) {
+      const diffY: number = p.position.y - p.mesh.position.y;
       p.mesh.position.y += 0.3 * diffY;
     }
   });

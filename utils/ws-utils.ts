@@ -17,10 +17,10 @@ export function handlePositionUpdate(
   }
 
   const player = players.get(json.userId)!;
-  player.x = json.payload.x;
-  player.y = json.payload.y;
-  player.vx = json.payload.vx;
-  player.vy = json.payload.vy;
+  player.position.x = json.payload.x;
+  player.position.y = json.payload.y;
+  player.velocity.x = json.payload.vx;
+  player.velocity.y = json.payload.vy;
 }
 
 export function handleAuthoritativeUpdate(
@@ -44,17 +44,17 @@ export function handleAuthoritativeUpdate(
     }
   });
 
-  Object.entries(json.payload.players).forEach(([userId, playerState]) => {
-    const localPlayer = players.get(userId);
-    if (localPlayer && userId !== clientId) {
-      localPlayer.x = playerState.x;
-      localPlayer.y = playerState.y;
-      localPlayer.vx = playerState.vx;
-      localPlayer.vy = playerState.vy;
+  Object.entries(json.payload.players).forEach(([userId, serverState]) => {
+    const player = players.get(userId);
+    if (player && userId !== clientId) {
+      player.position.x = serverState.x;
+      player.position.y = serverState.y;
+      player.velocity.x = serverState.vx;
+      player.velocity.y = serverState.vy;
     }
 
-    if (localPlayer && userId === clientId) {
-      localPlayer.reconcile(json.seqId, playerState);
+    if (player && userId === clientId) {
+      player.reconcile(json.seqId, serverState);
     }
   });
 }
