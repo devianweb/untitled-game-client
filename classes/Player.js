@@ -13,6 +13,8 @@ export default class Player {
   mesh;
   controls;
 
+  history = [];
+
   constructor({ materialColor = 0x00ff00, controls = null } = {}) {
     const geometry = new THREE.CircleGeometry(0.1, 64);
     const material = new THREE.MeshBasicMaterial({ color: materialColor });
@@ -20,19 +22,67 @@ export default class Player {
     this.controls = controls;
   }
 
-  reconcile = (serverSeqId) => {
-    let count = 0;
+  reconcile = (serverSeqId, player) => {
+    let tempX = player.x;
+    let tempY = player.y;
+    let tempVx = player.vx;
+    let tempVy = player.vy;
+
     for (let i = 0; i < this.controls.history.length; i++) {
+      const inputs = this.controls.history[i].inputs;
       if (this.controls.history[i].seqId > serverSeqId) {
-        this.updatePlayerPositionWithInputs(this.controls.history[i].inputs);
-        count++;
+        if (inputs.up && tempVy < this.maxV) {
+          tempVy += this.acceleration;
+        }
+        if (inputs.down && tempVy > -this.maxV) {
+          tempVy -= this.acceleration;
+        }
+        if (inputs.left && tempVx > -this.maxV) {
+          tempVx -= this.acceleration;
+        }
+        if (inputs.right && tempVx < this.maxV) {
+          tempVx += this.acceleration;
+        }
+
+        if (tempVx > 0) {
+          tempVx -= this.deceleration;
+          if (tempVx < 0.005) {
+            tempVx = 0;
+          }
+        } else if (tempVx < 0) {
+          tempVx += this.deceleration;
+          if (tempVx > -0.005) {
+            tempVx = 0;
+          }
+        }
+
+        if (tempVy > 0) {
+          tempVy -= this.deceleration;
+          if (tempVy < 0.005) {
+            tempVy = 0;
+          }
+        } else if (tempVy < 0) {
+          tempVy += this.deceleration;
+          if (tempVy > -0.005) {
+            tempVy = 0;
+          }
+        }
+
+        tempX += tempVx;
+        tempY += tempVy;
       }
     }
+
+    this.x = tempX;
+    this.y = tempY;
+    this.vx = tempVx;
+    this.vy = tempVy;
+
+    this.history.push("SERVER", this.x, this.y, this.vx, this.vy);
 
     this.controls.history = this.controls.history.filter(
       (h) => h.seqId > serverSeqId
     );
-    console.log("reconciled " + count + " inputs");
   };
 
   updatePlayerPosition = () => {
@@ -79,5 +129,7 @@ export default class Player {
 
     this.x += this.vx;
     this.y += this.vy;
+
+    this.history.push("CLIENT", this.x, this.y, this.vx, this.vy);
   };
 }

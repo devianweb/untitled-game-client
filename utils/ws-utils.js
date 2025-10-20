@@ -31,14 +31,16 @@ export function handleAuthoritativeUpdate(json, players, scene, clientId) {
 
   Object.entries(json.payload.players).forEach(([userId, player]) => {
     var localPlayer = players.get(userId);
-    if (localPlayer) {
+    if (localPlayer && userId !== clientId) {
+      console.log("shouldn't happen");
       localPlayer.x = player.x;
       localPlayer.y = player.y;
       localPlayer.vx = player.vx;
       localPlayer.vy = player.vy;
-      if (userId === clientId) {
-        localPlayer.reconcile(json.seqId);
-      }
+    }
+
+    if (userId === clientId) {
+      localPlayer.reconcile(json.seqId, player);
     }
   });
 }
