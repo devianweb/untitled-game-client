@@ -130,15 +130,7 @@ function updateServer() {
 
 function renderLoop() {
   players.forEach((p) => {
-    if (p.mesh.position.x !== p.position.x) {
-      const diffX: number = p.position.x - p.mesh.position.x;
-      p.mesh.position.x += 0.3 * diffX;
-    }
-
-    if (p.mesh.position.y !== p.position.y) {
-      const diffY: number = p.position.y - p.mesh.position.y;
-      p.mesh.position.y += 0.3 * diffY;
-    }
+    p.mesh.position.lerp(p.position, 0.3);
   });
   renderer.render(scene, camera.camera);
 }
