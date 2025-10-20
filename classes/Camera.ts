@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import Player from "./Player";
 
 export default class Camera {
   camera: THREE.OrthographicCamera;
@@ -45,14 +46,14 @@ export default class Camera {
     this.camera.updateProjectionMatrix();
   };
 
-  updateCameraPosition = (player: any): void => {
-    if (this.camera.position.x !== player.x) {
-      const diffX = player.x - this.camera.position.x;
+  updateCameraPosition = (player: Player): void => {
+    if (this.camera.position.x !== player.position.x) {
+      const diffX = player.position.x - this.camera.position.x;
       this.camera.position.x += 0.1 * diffX;
     }
 
-    if (this.camera.position.y !== player.y) {
-      const diffY = player.y - this.camera.position.y;
+    if (this.camera.position.y !== player.position.y) {
+      const diffY = player.position.y - this.camera.position.y;
       this.camera.position.y += 0.1 * diffY;
     }
   };
