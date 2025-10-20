@@ -1,36 +1,49 @@
 import * as THREE from "three";
+import Controls, { ControlInputs } from "./Controls";
+
+interface PlayerConstructorOptions {
+  materialColor?: number;
+  controls?: Controls | null;
+}
 
 export default class Player {
-  x = 0;
-  y = 0;
-  vx = 0;
-  vy = 0;
+  x: number = 0;
+  y: number = 0;
+  vx: number = 0;
+  vy: number = 0;
 
-  maxV = 0.1;
-  acceleration = this.maxV * 0.1;
-  deceleration = this.maxV * 0.025;
+  maxV: number = 0.1;
+  acceleration: number = this.maxV * 0.1;
+  deceleration: number = this.maxV * 0.025;
 
-  mesh;
-  controls;
+  mesh: THREE.Mesh;
+  controls: Controls | null;
 
-  history = [];
-
-  constructor({ materialColor = 0x00ff00, controls = null } = {}) {
+  constructor({
+    materialColor = 0x00ff00,
+    controls = null,
+  }: PlayerConstructorOptions = {}) {
     const geometry = new THREE.CircleGeometry(0.1, 64);
     const material = new THREE.MeshBasicMaterial({ color: materialColor });
     this.mesh = new THREE.Mesh(geometry, material);
     this.controls = controls;
   }
 
-  reconcile = (serverSeqId, player) => {
+  reconcile = (
+    serverSeqId: number,
+    player: { x: number; y: number; vx: number; vy: number }
+  ): void => {
+    if (!this.controls) return;
+
     let tempX = player.x;
     let tempY = player.y;
     let tempVx = player.vx;
     let tempVy = player.vy;
 
     for (let i = 0; i < this.controls.history.length; i++) {
-      const inputs = this.controls.history[i].inputs;
-      if (this.controls.history[i].seqId > serverSeqId) {
+      const entry = this.controls.history[i];
+      const inputs = entry.inputs;
+      if (entry.seqId > serverSeqId) {
         if (inputs.up && tempVy < this.maxV) {
           tempVy += this.acceleration;
         }
@@ -78,18 +91,17 @@ export default class Player {
     this.vx = tempVx;
     this.vy = tempVy;
 
-    this.history.push("SERVER", this.x, this.y, this.vx, this.vy);
-
     this.controls.history = this.controls.history.filter(
       (h) => h.seqId > serverSeqId
     );
   };
 
-  updatePlayerPosition = () => {
+  updatePlayerPosition = (): void => {
+    if (!this.controls) return;
     this.updatePlayerPositionWithInputs(this.controls.inputs);
   };
 
-  updatePlayerPositionWithInputs = (inputs) => {
+  updatePlayerPositionWithInputs = (inputs: ControlInputs): void => {
     if (inputs.up && this.vy < this.maxV) {
       this.vy += this.acceleration;
     }
@@ -129,7 +141,5 @@ export default class Player {
 
     this.x += this.vx;
     this.y += this.vy;
-
-    this.history.push("CLIENT", this.x, this.y, this.vx, this.vy);
   };
 }
