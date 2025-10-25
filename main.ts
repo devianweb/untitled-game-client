@@ -163,6 +163,7 @@ ws.onclose = () => {
 ws.onmessage = (event: MessageEvent<string>) => {
   try {
     const json: ServerMessage = JSON.parse(event.data);
+    // console.log(json);
     messages.push(json);
   } catch (e) {
     console.warn("Received malformed message", e);
