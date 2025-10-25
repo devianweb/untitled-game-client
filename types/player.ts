@@ -1,13 +1,15 @@
 import type { ControlInputs, InputHistoryEntry } from "./controls";
 
 export interface PlayerState {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
+  position: {
+    x: number;
+    y: number;
+  };
+  velocity: {
+    x: number;
+    y: number;
+  };
 }
-
-export type PositionHistory = [string, number, number, number, number];
 
 export interface PlayerConstructorOptions {
   materialColor?: number;

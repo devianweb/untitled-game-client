@@ -25,22 +25,37 @@ export default class Player {
 
   reconcile = (
     serverSeqId: number,
-    player: { x: number; y: number; vx: number; vy: number }
+    player: {
+      position: { x: number; y: number };
+      velocity: { x: number; y: number };
+    }
   ): void => {
     if (!this.controls) return;
 
-    const serverPos = new THREE.Vector3(player.x, player.y, 0);
-    const serverVel = new THREE.Vector3(player.vx, player.vy, 0);
+    const serverPos = new THREE.Vector3(
+      player.position.x,
+      player.position.y,
+      0
+    );
+    const serverVel = new THREE.Vector3(
+      player.velocity.x,
+      player.velocity.y,
+      0
+    );
 
     for (let i = 0; i < this.controls.history.length; i++) {
       const entry = this.controls.history[i];
       const inputs = entry.inputs;
       if (entry.seqId > serverSeqId) {
-        const newPos = this.calculateNewPosition(serverPos, serverVel, inputs);
-        serverPos.copy(newPos);
+        const { newPosition, newVelocity } = this.calculateNewPosition(
+          serverPos,
+          serverVel,
+          inputs
+        );
+        serverPos.copy(newPosition);
+        serverVel.copy(newVelocity);
       }
     }
-
     this.position.copy(serverPos);
     this.velocity.copy(serverVel);
 
@@ -51,49 +66,57 @@ export default class Player {
 
   updatePlayerPosition = (): void => {
     if (!this.controls) return;
-    this.position.copy(
-      this.calculateNewPosition(
-        this.position,
-        this.velocity,
-        this.controls.inputs
-      )
+
+    const { newPosition, newVelocity } = this.calculateNewPosition(
+      this.position,
+      this.velocity,
+      this.controls.inputs
     );
+
+    this.position.copy(newPosition);
+    this.velocity.copy(newVelocity);
   };
 
   calculateNewPosition = (
     currentPosition: THREE.Vector3,
     currentVelocity: THREE.Vector3,
     inputs: ControlInputs
-  ): THREE.Vector3 => {
-    // Apply input acceleration
-    if (inputs.up && currentVelocity.y < this.maxV)
-      currentVelocity.y += this.acceleration;
-    if (inputs.down && currentVelocity.y > -this.maxV)
-      currentVelocity.y -= this.acceleration;
-    if (inputs.left && currentVelocity.x > -this.maxV)
-      currentVelocity.x -= this.acceleration;
-    if (inputs.right && currentVelocity.x < this.maxV)
-      currentVelocity.x += this.acceleration;
+  ): { newPosition: THREE.Vector3; newVelocity: THREE.Vector3 } => {
+    const tempPos = currentPosition.clone();
+    const tempVel = currentVelocity.clone();
 
-    // Deceleration X
-    if (currentVelocity.x > 0) {
-      currentVelocity.x -= this.deceleration;
-      if (currentVelocity.x < 0.005) currentVelocity.x = 0;
-    } else if (currentVelocity.x < 0) {
-      currentVelocity.x += this.deceleration;
-      if (currentVelocity.x > -0.005) currentVelocity.x = 0;
+    // Build input direction vector
+    const dir = new THREE.Vector3(
+      (inputs.right ? 1 : 0) - (inputs.left ? 1 : 0),
+      (inputs.up ? 1 : 0) - (inputs.down ? 1 : 0),
+      0
+    );
+
+    // Apply acceleration along normalized direction
+    if (dir.lengthSq() > 0) {
+      dir.normalize().multiplyScalar(this.acceleration);
+      tempVel.add(dir);
     }
 
-    // Deceleration Y
-    if (currentVelocity.y > 0) {
-      currentVelocity.y -= this.deceleration;
-      if (currentVelocity.y < 0.005) currentVelocity.y = 0;
-    } else if (currentVelocity.y < 0) {
-      currentVelocity.y += this.deceleration;
-      if (currentVelocity.y > -0.005) currentVelocity.y = 0;
+    // Friction + Deadzone
+    if (dir.lengthSq() === 0 && tempVel.lengthSq() > 0) {
+      const speed = tempVel.length();
+      const newSpeed = speed - this.deceleration;
+      if (newSpeed <= 0.005) {
+        console.log("Setting velocity to zero due to deadzone");
+        tempVel.set(0, 0, 0);
+      } else {
+        tempVel.multiplyScalar(newSpeed / speed);
+      }
     }
 
-    // return new position
-    return currentPosition.add(currentVelocity);
+    // Clamp Velocity
+    if (tempVel.length() > this.maxV) {
+      tempVel.multiplyScalar(this.maxV / tempVel.length());
+    }
+
+    tempPos.add(tempVel);
+
+    return { newPosition: tempPos, newVelocity: tempVel };
   };
 }
