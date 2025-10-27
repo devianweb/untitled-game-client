@@ -15,9 +15,6 @@ export default class Pointer {
     this.lineStart = player.position.clone();
     this.lineStart.z = -0.5;
 
-    console.log("pointer line start", this.lineStart);
-    console.log("pointer line end", this.mouse.worldPoint.clone().setZ(-0.5));
-
     const geometry = new THREE.BufferGeometry().setFromPoints([
       this.lineStart,
       this.mouse.worldPoint.clone().setZ(-0.5),
@@ -30,11 +27,6 @@ export default class Pointer {
     const positions = this.line.geometry.attributes.position
       .array as Float32Array;
     this.lineStart.lerp(this.player.position, 0.3);
-    console.log("updating pointer line start", this.lineStart);
-    console.log(
-      "updating pointer line end",
-      this.mouse.worldPoint.clone().setZ(-0.5)
-    );
     positions[0] = this.lineStart.x;
     positions[1] = this.lineStart.y;
     positions[3] = this.mouse.worldPoint.x;

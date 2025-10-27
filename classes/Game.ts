@@ -96,7 +96,7 @@ export default class Game {
       this.mouse.update();
 
       this.player1.updatePlayerPosition();
-      // this.pointer.update();
+      this.pointer.update();
       this.camera.updateCameraPosition(this.player1);
       this.updateServer();
 
