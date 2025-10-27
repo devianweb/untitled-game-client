@@ -39,8 +39,6 @@ export default class Game {
   mouseCoordinates = document.getElementById(
     "mouse-coordinates"
   ) as HTMLDivElement;
-  // status
-  status = document.getElementById("status") as HTMLDivElement;
 
   constructor(
     renderer: THREE.WebGLRenderer,
@@ -98,7 +96,7 @@ export default class Game {
       this.mouse.update();
 
       this.player1.updatePlayerPosition();
-      this.pointer.update();
+      // this.pointer.update();
       this.camera.updateCameraPosition(this.player1);
       this.updateServer();
 
@@ -184,23 +182,6 @@ export default class Game {
   };
 
   setupWebSocketHandlers = () => {
-    this.ws.onopen = () => {
-      this.status.textContent = "Connected to server";
-      this.status.style.color = "green";
-    };
-
-    this.ws.onerror = (error: Event) => {
-      // WebSocket error is broadly typed; narrow if needed later
-      this.status.textContent = "Error";
-      this.status.style.color = "red";
-      console.error(error);
-    };
-
-    this.ws.onclose = () => {
-      this.status.textContent = "Disconnected from server";
-      this.status.style.color = "red";
-    };
-
     this.ws.onmessage = (event: MessageEvent<string>) => {
       try {
         const json: ServerMessage = JSON.parse(event.data);

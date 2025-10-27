@@ -2,15 +2,47 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>My first three.js app</title>
+    <title>Untitled Game Client</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
-  <body>
+  <body class="m-0 w-screen h-screen overflow-hidden relative">
     <script type="module" src="/main.ts"></script>
-    <div id="status">Connecting to server...</div>
-    <div id="mouse-coordinates">0, 0</div>
-    <div id="coordinates">0, 0</div>
 
-    <canvas id="canvas"></canvas>
+    <div
+      id="menu"
+      class="flex items-center justify-center w-screen h-screen bg-black/60"
+    >
+      <button
+        id="start-button"
+        class="px-6 py-3 rounded bg-blue-600 text-white font-semibold hover:bg-blue-500 transition"
+      >
+        Start
+      </button>
+    </div>
+
+    <div id="debug-ui">
+      <div
+        id="status"
+        class="absolute font-bold top-2 left-2 z-10 text-yellow-500"
+      >
+        Connecting to server...
+      </div>
+      <div
+        id="coordinates"
+        class="absolute font-bold text-green-500 top-2 right-2 z-10"
+      >
+        0, 0
+      </div>
+      <div
+        id="mouse-coordinates"
+        class="absolute font-bold text-blue-500 top-8 right-2 z-10"
+      >
+        0, 0
+      </div>
+    </div>
+
+    <div id="game" class="hidden w-screen h-screen relative">
+      <canvas id="canvas" class="block w-screen h-screen"></canvas>
+    </div>
   </body>
 </html>
