@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import Controls from "./Controls";
 import { ControlInputs, PlayerConstructorOptions } from "../types";
+import Pointer from "./Pointer";
 
 export default class Player {
   position: THREE.Vector3 = new THREE.Vector3();
@@ -17,10 +18,11 @@ export default class Player {
     materialColor = 0x00ff00,
     controls = null,
   }: PlayerConstructorOptions = {}) {
+    this.controls = controls;
+
     const geometry = new THREE.CircleGeometry(0.1, 64);
     const material = new THREE.MeshBasicMaterial({ color: materialColor });
     this.mesh = new THREE.Mesh(geometry, material);
-    this.controls = controls;
   }
 
   reconcile = (

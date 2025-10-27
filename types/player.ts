@@ -1,4 +1,5 @@
-import type { ControlInputs, InputHistoryEntry } from "./controls";
+import Controls from "../classes/Controls";
+import Pointer from "../classes/Pointer";
 
 export interface PlayerState {
   position: {
@@ -13,5 +14,6 @@ export interface PlayerState {
 
 export interface PlayerConstructorOptions {
   materialColor?: number;
-  controls?: import("../classes/Controls").default | null;
+  controls?: Controls | null;
+  pointer?: Pointer | null;
 }

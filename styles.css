@@ -28,3 +28,12 @@ body {
   right: 8px;
   z-index: 1;
 }
+
+#mouse-coordinates {
+  position: absolute;
+  font-weight: bold;
+  color: blue;
+  top: 32px;
+  right: 8px;
+  z-index: 1;
+}
