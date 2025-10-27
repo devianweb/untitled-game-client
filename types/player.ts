@@ -1,5 +1,4 @@
 import Controls from "../classes/Controls";
-import Pointer from "../classes/Pointer";
 
 export interface PlayerState {
   position: {
@@ -15,5 +14,4 @@ export interface PlayerState {
 export interface PlayerConstructorOptions {
   materialColor?: number;
   controls?: Controls | null;
-  pointer?: Pointer | null;
 }
