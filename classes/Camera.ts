@@ -22,7 +22,7 @@ export default class Camera {
     this.camera = this.createCamera();
 
     // Window resize
-    window.addEventListener("resize", () => this.updateCameraOnResize());
+    window.addEventListener("resize", () => this.updateCameraSize());
   }
 
   createCamera = (): THREE.OrthographicCamera => {
@@ -38,7 +38,7 @@ export default class Camera {
     return camera;
   };
 
-  updateCameraOnResize = (): void => {
+  updateCameraSize = (): void => {
     this.aspect = this.calculateAspect();
     this.left = this.calculateLeft();
     this.right = this.calculateRight();

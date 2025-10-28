@@ -16,6 +16,7 @@ export default class Game {
   scene: THREE.Scene;
 
   // game
+  gameid: string | null = null;
   userId: string;
   player1: Player;
   players: Map<string, Player>;
@@ -27,7 +28,7 @@ export default class Game {
   timestep = 1000 / 60;
 
   // networking
-  ws: WebSocket;
+  ws: WebSocket | null = null;
   tick = 0;
   seqId = 0;
   sendFinalInputTick = false;
@@ -40,6 +41,9 @@ export default class Game {
     "mouse-coordinates"
   ) as HTMLDivElement;
 
+  //status
+  status = document.getElementById("status") as HTMLDivElement;
+
   constructor(
     renderer: THREE.WebGLRenderer,
     scene: THREE.Scene,
@@ -49,8 +53,7 @@ export default class Game {
     controls: Controls,
     mouse: Mouse,
     camera: Camera,
-    pointer: Pointer,
-    ws: WebSocket
+    pointer: Pointer
   ) {
     this.renderer = renderer;
     this.scene = scene;
@@ -61,12 +64,15 @@ export default class Game {
     this.mouse = mouse;
     this.camera = camera;
     this.pointer = pointer;
-    this.ws = ws;
   }
 
-  start = () => {
+  start = (gameId: string) => {
+    this.gameid = gameId;
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
+
+    this.camera.updateCameraSize();
     this.createBackground();
-    this.setupWebSocketHandlers();
+    this.ws = this.setupWebSocketHandlers(gameId);
 
     requestAnimationFrame(this.gameLoop);
     this.renderer.setAnimationLoop(this.renderLoop);
@@ -96,7 +102,7 @@ export default class Game {
       this.mouse.update();
 
       this.player1.updatePlayerPosition();
-      this.pointer.update();
+      // this.pointer.update();
       this.camera.updateCameraPosition(this.player1);
       this.updateServer();
 
@@ -129,7 +135,7 @@ export default class Game {
   };
 
   updateServer = () => {
-    if (this.ws.readyState === WebSocket.OPEN) {
+    if (this.ws !== null && this.ws.readyState === WebSocket.OPEN) {
       if (
         this.controls.inputs.up ||
         this.controls.inputs.down ||
@@ -181,8 +187,49 @@ export default class Game {
     this.scene.add(particles);
   };
 
-  setupWebSocketHandlers = () => {
-    this.ws.onmessage = (event: MessageEvent<string>) => {
+  setupWebSocketHandlers = (gameId: string): WebSocket => {
+    // WebSockets
+    // Connect to the WebSocket server
+    const ws = new WebSocket(
+      `wss://semiglazed-too-kimberlie.ngrok-free.dev/ws/games/${gameId}?userId=${this.userId}`
+    );
+
+    ws.onopen = () => {
+      console.log("WebSocket connection established");
+      this.status.textContent = "Connected to server";
+      this.status.classList.remove(
+        "text-green-500",
+        "text-red-500",
+        "text-yellow-500"
+      );
+      this.status.classList.add("text-green-500");
+    };
+
+    ws.onerror = (error: Event) => {
+      console.log("WebSocket error");
+      // WebSocket error is broadly typed; narrow if needed later
+      this.status.textContent = "Error";
+      this.status.classList.remove(
+        "text-green-500",
+        "text-red-500",
+        "text-yellow-500"
+      );
+      this.status.classList.add("text-red-500");
+      console.error(error);
+    };
+
+    ws.onclose = () => {
+      console.log("WebSocket connection closed");
+      this.status.textContent = "Disconnected from server";
+      this.status.classList.remove(
+        "text-green-500",
+        "text-red-500",
+        "text-yellow-500"
+      );
+      this.status.classList.add("text-red-500");
+    };
+
+    ws.onmessage = (event: MessageEvent<string>) => {
       try {
         const json: ServerMessage = JSON.parse(event.data);
         // console.log(json);
@@ -191,5 +238,7 @@ export default class Game {
         console.warn("Received malformed message", e);
       }
     };
+
+    return ws;
   };
 }
