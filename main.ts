@@ -5,6 +5,7 @@ import Camera from "./classes/Camera";
 import Mouse from "./classes/Mouse";
 import Pointer from "./classes/Pointer";
 import Game from "./classes/Game";
+import Menu from "./classes/Menu";
 
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 
@@ -37,12 +38,6 @@ window.addEventListener("resize", () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-// WebSockets
-// Connect to the WebSocket server
-const ws = new WebSocket(
-  `wss://semiglazed-too-kimberlie.ngrok-free.dev/ws/games/1337?userId=${userId}`
-);
-
 const game = new Game(
   renderer,
   scene,
@@ -52,8 +47,8 @@ const game = new Game(
   controls,
   mouse,
   camera,
-  pointer,
-  ws
+  pointer
 );
 
-game.start();
+// menu 'tings
+const menu = new Menu(game, camera);

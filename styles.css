@@ -1,39 +1,10 @@
-body {
-  margin: 0;
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden;
-  position: relative;
+@import url("https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap");
+@import "tailwindcss";
+
+@theme {
+  --font-pixelify: "Pixelify Sans", sans-serif;
 }
 
-#canvas {
-  display: block;
-  width: 100vw;
-  height: 100vh;
-}
-
-#status {
-  position: absolute;
-  font-weight: bold;
-  top: 8px;
-  left: 8px;
-  z-index: 1;
-}
-
-#coordinates {
-  position: absolute;
-  font-weight: bold;
-  color: green;
-  top: 8px;
-  right: 8px;
-  z-index: 1;
-}
-
-#mouse-coordinates {
-  position: absolute;
-  font-weight: bold;
-  color: blue;
-  top: 32px;
-  right: 8px;
-  z-index: 1;
+* {
+  font-family: var(--font-pixelify);
 }

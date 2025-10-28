@@ -1,3 +1,7 @@
-export default {
-  base: process.env.NODE_ENV === "production" ? "/untitled-game-client/" : "/",
-};
+import { defineConfig } from "vite";
+import tailwindcss from "@tailwindcss/vite";
+
+export default defineConfig(({ mode }) => ({
+  base: mode === "production" ? "/untitled-game-client/" : "/",
+  plugins: [tailwindcss()],
+}));
