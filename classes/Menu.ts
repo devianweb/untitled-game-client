@@ -53,7 +53,7 @@ export default class Menu {
         joinButton.addEventListener("click", () => {
           this.menu.style.display = "none";
           this.game.style.display = "block";
-          this.debugUI.classList.remove("hidden");
+          this.debugUI.style.display = "block";
           this.instance.start(server.id);
         });
       });
@@ -75,7 +75,7 @@ export default class Menu {
             <td class="px-3 py-2 whitespace-nowrap">${server.id}</td>
             <td class="px-3 py-2 whitespace-nowrap">${server.players}</td>
             <td class="px-3 py-2 whitespace-nowrap">
-              <button data-server-id="${server.id}" class="px-6 py-3 rounded bg-orange-600 text-white font-semibold hover:bg-orange-500 transition font-pixelify">
+              <button data-server-id="${server.id}" class="px-6 py-3 rounded bg-orange-600 text-white font-semibold hover:bg-orange-500 transition text-base">
                 Join
               </button>
             </td>
