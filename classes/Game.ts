@@ -196,37 +196,19 @@ export default class Game {
 
     ws.onopen = () => {
       console.log("WebSocket connection established");
-      this.status.textContent = "Connected to server";
-      this.status.classList.remove(
-        "text-green-500",
-        "text-red-500",
-        "text-yellow-500"
-      );
-      this.status.classList.add("text-green-500");
+      this.updateWebsocketStatusText("Connected to server", "green");
     };
 
     ws.onerror = (error: Event) => {
       console.log("WebSocket error");
       // WebSocket error is broadly typed; narrow if needed later
-      this.status.textContent = "Error";
-      this.status.classList.remove(
-        "text-green-500",
-        "text-red-500",
-        "text-yellow-500"
-      );
-      this.status.classList.add("text-red-500");
+      this.updateWebsocketStatusText("Error", "red");
       console.error(error);
     };
 
     ws.onclose = () => {
       console.log("WebSocket connection closed");
-      this.status.textContent = "Disconnected from server";
-      this.status.classList.remove(
-        "text-green-500",
-        "text-red-500",
-        "text-yellow-500"
-      );
-      this.status.classList.add("text-red-500");
+      this.updateWebsocketStatusText("Disconnected from server", "red");
     };
 
     ws.onmessage = (event: MessageEvent<string>) => {
@@ -240,5 +222,18 @@ export default class Game {
     };
 
     return ws;
+  };
+
+  private updateWebsocketStatusText = (
+    message: string,
+    color: "green" | "red" | "yellow"
+  ) => {
+    this.status.textContent = message;
+    this.status.classList.remove(
+      "text-green-500",
+      "text-red-500",
+      "text-yellow-500"
+    );
+    this.status.classList.add(`text-${color}-500`);
   };
 }
