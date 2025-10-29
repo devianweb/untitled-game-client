@@ -39,12 +39,7 @@ export default class Menu {
     this.instance = instance;
     this.camera = camera;
 
-    const servers = this.getServerList();
-    servers.then((servers) => {
-      if (servers === null) return;
-      this.renderServerRows(servers.games);
-      this.addEventListenersToJoinButtons(servers.games);
-    });
+    this.getServersAndRenderTable();
 
     this.createButton.addEventListener("click", () => {
       const serverNameInput = document.getElementById(
@@ -59,23 +54,22 @@ export default class Menu {
 
       this.createServer(serverName).then((gameId) => {
         if (gameId !== null) {
-          this.menu.style.display = "none";
-          this.game.style.display = "block";
-          this.debugUI.style.display = "block";
-          this.instance.start(gameId);
+          this.startGame(gameId);
         }
       });
     });
 
     this.refreshButton.addEventListener("click", () => {
-      const servers = this.getServerList();
-      servers.then((servers) => {
-        if (servers === null) return;
-        this.renderServerRows(servers.games);
-        this.addEventListenersToJoinButtons(servers.games);
-      });
+      this.getServersAndRenderTable();
     });
   }
+
+  startGame = (gameId: string) => {
+    this.menu.style.display = "none";
+    this.game.style.display = "block";
+    this.debugUI.style.display = "block";
+    this.instance.start(gameId);
+  };
 
   createServer = async (name: string): Promise<string | null> => {
     try {
@@ -149,11 +143,17 @@ export default class Menu {
         `button[data-server-id="${server.id}"]`
       ) as HTMLButtonElement;
       joinButton.addEventListener("click", () => {
-        this.menu.style.display = "none";
-        this.game.style.display = "block";
-        this.debugUI.style.display = "block";
-        this.instance.start(server.id);
+        this.startGame(server.id);
       });
     });
   };
+
+  private getServersAndRenderTable() {
+    const servers = this.getServerList();
+    servers.then((servers) => {
+      if (servers === null) return;
+      this.renderServerRows(servers.games);
+      this.addEventListenersToJoinButtons(servers.games);
+    });
+  }
 }
