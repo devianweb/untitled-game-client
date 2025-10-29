@@ -1,4 +1,4 @@
-import { Server, Servers } from "../types/menu";
+import { ErrorResponse, Server, Servers } from "../types/menu";
 import Camera from "./Camera";
 import Game from "./Game";
 
@@ -53,7 +53,7 @@ export default class Menu {
       const serverName = serverNameInput.value.trim();
       if (!serverName) {
         this.errorMessage.style.display = "block";
-        this.errorMessage.textContent = "Please enter a server name.";
+        this.errorMessage.textContent = "please enter a server name";
         return;
       }
 
@@ -89,8 +89,14 @@ export default class Menu {
         body: JSON.stringify({ userId: this.userId, name: name }),
       });
       const data = await res.json();
+      if (data.status >= 400) {
+        const errorData = data as ErrorResponse;
+        this.errorMessage.style.display = "block";
+        this.errorMessage.textContent = errorData.detail;
+        return null;
+      }
       return data.gameId;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating server:", error);
       return null;
     }
