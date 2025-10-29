@@ -32,5 +32,6 @@ export default class Pointer {
     positions[3] = this.mouse.worldPoint.x;
     positions[4] = this.mouse.worldPoint.y;
     this.line.geometry.attributes.position.needsUpdate = true;
+    this.line.geometry.computeBoundingSphere();
   }
 }
