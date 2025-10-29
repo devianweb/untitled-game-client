@@ -92,6 +92,8 @@ export default class Menu {
       return data.gameId;
     } catch (error: any) {
       console.error("Error creating server:", error);
+      this.errorMessage.style.display = "block";
+      this.errorMessage.textContent = "Failed to create server: " + (error?.message || error);
       return null;
     }
   };
