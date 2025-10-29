@@ -51,4 +51,4 @@ const game = new Game(
 );
 
 // menu 'tings
-const menu = new Menu(game, camera);
+const menu = new Menu(userId, game, camera);

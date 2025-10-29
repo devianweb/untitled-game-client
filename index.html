@@ -10,22 +10,63 @@
 
     <div
       id="menu"
-      class="flex items-center justify-center w-screen h-screen bg-green-900"
+      class="flex flex-col items-center justify-center w-screen h-screen bg-green-900"
     >
       <h1 class="absolute top-10 text-4xl text-white font-bold">
         Untitled Game
       </h1>
-      <div>
+      <div class="flex gap-x-2 mb-2">
         <button
           id="refresh-button"
           class="px-6 py-3 rounded bg-orange-600 text-white font-semibold hover:bg-orange-500 transition font-pixelify"
         >
-          Refresh
+          <svg
+            class="size-5 rtl:rotate-180"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 36 36"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M27.729 18.664c0 6.467-5.261 11.729-11.729 11.729s-11.729-5.261-11.729-11.729c0-6.452 5.237-11.703 11.684-11.728v5.333l10.129-5.865-10.129-5.864v5.33c-7.047 0.024-12.751 5.741-12.751 12.794 0 7.065 5.727 12.795 12.795 12.795 7.066 0 12.795-5.73 12.795-12.795h-1.066zM17.022 2.39l6.935 4.015-6.935 4.016v-8.030"
+            ></path>
+          </svg>
         </button>
-
-        <div class="overflow-x-auto text-2xl">
-          <table class="min-w-full divide-y-2 divide-gray-200">
-            <thead class="ltr:text-left rtl:text-right">
+        <input
+          type="text"
+          id="server-name"
+          placeholder="Enter server name"
+          class="px-4 py-2 rounded border border-green-800 hover:border-green-600 focus:outline-none focus:ring-2 focus:ring-green-600 text-xl"
+        />
+        <button
+          id="create-button"
+          class="px-6 py-3 rounded bg-orange-600 text-white font-semibold hover:bg-orange-500 transition font-pixelify"
+        >
+          <svg
+            class="size-5 rtl:rotate-180"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M5,12H19M12,5V19"
+            ></path>
+          </svg>
+        </button>
+      </div>
+      <div>
+        <div class="overflow-x-auto text-2xl max-h-[60vh] overflow-y-auto">
+          <table class="min-w-full divide-y-2 divide-green-800">
+            <thead
+              class="ltr:text-left rtl:text-right sticky top-0 bg-green-900"
+            >
               <tr class="*:font-medium *:text-gray-900">
                 <th class="px-3 py-2 whitespace-nowrap">Server Name</th>
                 <th class="px-3 py-2 whitespace-nowrap">Players</th>
@@ -34,9 +75,12 @@
             </thead>
             <tbody
               id="server-table-body"
-              class="divide-y divide-gray-200 *:even:bg-gray-50"
+              class="divide-y divide-green-800 *:even:bg-green-800"
             ></tbody>
           </table>
+        </div>
+        <div class="flex justify-center mt-4">
+          <p class="text-red-500 hidden" id="error-message"></p>
         </div>
       </div>
     </div>
