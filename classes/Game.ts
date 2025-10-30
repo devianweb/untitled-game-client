@@ -8,7 +8,6 @@ import {
 } from "../utils/ws-utils";
 import Mouse from "./Mouse";
 import Camera from "./Camera";
-import Pointer from "./Pointer";
 
 export default class Game {
   // threejs
@@ -23,7 +22,6 @@ export default class Game {
   controls: Controls;
   mouse: Mouse;
   camera: Camera;
-  pointer: Pointer;
   lastUpdate = performance.now();
   timestep = 1000 / 60;
 
@@ -52,8 +50,7 @@ export default class Game {
     players: Map<string, Player>,
     controls: Controls,
     mouse: Mouse,
-    camera: Camera,
-    pointer: Pointer
+    camera: Camera
   ) {
     this.renderer = renderer;
     this.scene = scene;
@@ -63,7 +60,6 @@ export default class Game {
     this.controls = controls;
     this.mouse = mouse;
     this.camera = camera;
-    this.pointer = pointer;
   }
 
   start = (gameId: string) => {
@@ -100,7 +96,6 @@ export default class Game {
 
       this.player1.updatePlayerPosition();
       this.mouse.updateWorldPoint();
-      this.pointer.update();
       this.camera.updateCameraPosition(this.player1);
       this.updateServer();
 
