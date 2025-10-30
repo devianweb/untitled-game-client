@@ -3,7 +3,6 @@ import Player from "./classes/Player";
 import Controls from "./classes/Controls";
 import Camera from "./classes/Camera";
 import Mouse from "./classes/Mouse";
-import Pointer from "./classes/Pointer";
 import Game from "./classes/Game";
 import Menu from "./classes/Menu";
 
@@ -24,11 +23,9 @@ const controls = new Controls();
 
 // create client player
 const player1 = new Player({ controls: controls });
-const pointer = new Pointer(mouse, player1);
 
 players.set(userId, player1);
 scene.add(player1.mesh);
-scene.add(pointer.line);
 
 // renderer
 const renderer = new THREE.WebGLRenderer({ canvas });
@@ -46,8 +43,7 @@ const game = new Game(
   players,
   controls,
   mouse,
-  camera,
-  pointer
+  camera
 );
 
 // menu 'tings
