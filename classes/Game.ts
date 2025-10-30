@@ -98,10 +98,8 @@ export default class Game {
       });
       while (this.messages.length > 0) this.messages.pop();
 
-      //mouse bits
-      this.mouse.update();
-
       this.player1.updatePlayerPosition();
+      this.mouse.updateWorldPoint();
       this.pointer.update();
       this.camera.updateCameraPosition(this.player1);
       this.updateServer();
