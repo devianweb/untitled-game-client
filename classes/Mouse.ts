@@ -24,11 +24,9 @@ export default class Mouse {
 
       this.ndc.x = x * 2 - 1;
       this.ndc.y = -(y * 2 - 1);
-    });
-  }
 
-  update() {
-    this.raycaster.setFromCamera(this.ndc, this.camera);
-    this.worldPoint = this.raycaster.ray.origin.clone();
+      this.worldPoint.set(this.ndc.x, this.ndc.y, -0.5);
+      this.worldPoint.unproject(this.camera);
+    });
   }
 }
